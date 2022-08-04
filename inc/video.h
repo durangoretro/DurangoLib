@@ -26,7 +26,6 @@
 #define FUCSIA 0xee
 #define BLANCO 0xff
 
-#define VIDEO_MEM (unsigned int*)0xdf80
 
 typedef struct{
     unsigned char x, y, color;
