@@ -13,7 +13,9 @@ To use this FrameWork, you can use the next approach:
 1. Install in your own machine.
 
     a. Download the Last Relase from the [Release page](https://github.com/durangoretro/DurangoLib/releases).
+    
     b. unzip in your computer the Zip File.
+    
     c. Create a new Environment Variable ```DDK``` (Durango Dev Kit) that contains the Path where the Zip was unziped.
     
 2. Use a [Docker Image](https://hub.docker.com/r/zerasul/durangodevkit/tags).
