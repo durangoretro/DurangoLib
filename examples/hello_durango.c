@@ -9,10 +9,6 @@
 #include <durango.h>
 
 int main(){
-
-    // Set Video Mode to RGB and use SCREEN 3 space.
-    setVideoMode(RGB | SCREEN_3);
-    
 	//Draw Pixel pair
     drawPixelPair(10, 2, ROJO);
     
