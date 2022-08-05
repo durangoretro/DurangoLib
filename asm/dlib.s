@@ -3,6 +3,9 @@
 
 .export _setVideoMode
 .export _drawPixelPair
+.export _waitVsync
+.export _waitFrames
+.export _fillScreen
 
 .zeropage
 _screen_pointer: .res 2, $00 ;  Reserve a local zero page pointer for screen position
@@ -119,4 +122,48 @@ _screen_pointer: .res 2, $00 ;  Reserve a local zero page pointer for screen pos
 	RTS
 .endproc
 
+; Wait for vsync.
+.proc _waitVsync: near
+    wait_loop:
+    BIT $DF88
+    BVC wait_loop
+    RTS
+.endproc
 
+.proc _waitFrames: near
+	TAX
+	wait_vsync_end:
+    BIT $DF88
+    BVS wait_vsync_end
+	wait_vsync_begin:
+    BIT $DF88
+    BVC wait_vsync_begin   
+    DEX
+    BNE wait_vsync_end
+	RTS
+.endproc
+
+.proc _fillScreen: near
+	; Init video pointer
+    LDX #$60
+    STX _screen_pointer+1
+    LDX #$00
+    STX _screen_pointer
+	TAX
+loop2:
+	TXA
+	; Iterate over less significative memory address
+    LDY #$00
+loop:
+    STA (_screen_pointer), Y
+    INY
+    BNE loop
+
+    ; Iterate over more significative memory address
+    INC _screen_pointer+1 ; Increment memory pointer Hi address
+	LDA #$80 ; Compare with end memory position
+	CMP _screen_pointer+1
+    BNE loop2
+    RTS	
+RTS
+.endproc

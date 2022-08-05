@@ -26,13 +26,11 @@ _init:
 ; ---------------------------------------------------------------------------  
 ; Disable hardware periodic interrupt
           SEI                          ; Disable interrupts
-
 ; ---------------------------------------------------------------------------    
 ; Initialize 6502 stack
           LDX     #$FF                 ; Initialize stack pointer to $01FF
           TXS
           CLD                          ; Clear decimal mode
-
 ; ---------------------------------------------------------------------------
 ; Set cc65 argument stack pointer
 
@@ -48,6 +46,10 @@ _init:
           JSR     copydata             ; Initialize DATA segment
           JSR     initlib              ; Run constructors
 
+; ---------------------------------------------------------------------------    
+; Initialize Durango Video
+          LDA #$3c
+          STA $df80
 ; ---------------------------------------------------------------------------
 ; Call main()
 
