@@ -16,7 +16,5 @@ int main(){
 	//Draw Pixel pair
     drawPixelPair(10, 2, ROJO);
     
-	//inifinite Loop
-    while(1){}
-    return 0;
+	return 0;
 }

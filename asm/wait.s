@@ -25,7 +25,8 @@
 ; ---------------------------------------------------------------------------
 
 .proc _stop: near
-
-.byte      $DB                    ; Inserts a STP opcode
+	CLC
+	forever:
+	BCC forever
 
 .endproc
