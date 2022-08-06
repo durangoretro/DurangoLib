@@ -171,7 +171,12 @@ loop:
 .endproc
 
 .proc  _consoleLogHex: near
-    RTS
+    ; Set virtual serial port in hex mode
+	LDX #$00
+	STX $df94
+	; Send value to virtual serial port
+	STA $df93
+	RTS
 .endproc
 
 .proc  _consoleLogChar: near
