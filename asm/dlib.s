@@ -12,6 +12,7 @@
 
 .zeropage
 _screen_pointer: .res 2, $00 ;  Reserve a local zero page pointer for screen position
+_data_pointer: .res 2, $00 ;  Reserve a local zero page pointer for data position
 
 
 .segment "CODE"
@@ -189,5 +190,20 @@ loop:
 .endproc
 
 .proc  _consoleLogStr: near
+	; Get data pointer from procedure args
+    STA _data_pointer
+    STX _data_pointer+1
+	; Set virtual serial port in ascii mode
+	LDA #$01
+	STA $df94
+	; Iterator
+	LDY #$00
+	loop:
+	LDA (_data_pointer),Y
+	BEQ end
+	STA $df93
+	INY
+	BNE loop
+	end:
     RTS
 .endproc
