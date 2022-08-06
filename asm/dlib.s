@@ -6,6 +6,9 @@
 .export _waitVsync
 .export _waitFrames
 .export _fillScreen
+.export _consoleLogHex
+.export _consoleLogChar
+.export _consoleLogStr
 
 .zeropage
 _screen_pointer: .res 2, $00 ;  Reserve a local zero page pointer for screen position
@@ -164,6 +167,17 @@ loop:
 	LDA #$80 ; Compare with end memory position
 	CMP _screen_pointer+1
     BNE loop2
-    RTS	
-RTS
+    RTS
+.endproc
+
+.proc  _consoleLogHex: near
+    RTS
+.endproc
+
+.proc  _consoleLogChar: near
+    RTS
+.endproc
+
+.proc  _consoleLogStr: near
+    RTS
 .endproc
