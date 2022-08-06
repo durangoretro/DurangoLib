@@ -6,10 +6,29 @@
 
 #include <durango.h>
 
+unsigned char x, y, gamepad;
+
 int main(){
+	// Initialize coords
+	x = 2;
+	y = 2;	
+
 	// Draw background color
 	fillScreen(YELLOW);
-	// Draw rect
-	drawRect(10, 20, 50, 70, GREEN);    
+
+
+	while(1) {
+		// Wait for VSYNC
+		waitVsync();
+		// Delete previously square
+		drawRect(x, y, 10, 10, YELLOW);
+		// Read gamepad
+		gamepad=readGamepad1();
+		consoleLogHex(gamepad);
+		// Update square coords
+		// Draw square
+		drawRect(x, y, 10, 10, GREEN);
+	}
+	
 	return 0;
 }
