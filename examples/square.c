@@ -21,13 +21,14 @@ int main(){
 		// Wait for VSYNC
 		waitVsync();
 		// Delete previously square
-		drawRect(x, y, 10, 10, YELLOW);
+		//drawRect(x, y, 10, 10, YELLOW);
 		// Read gamepad
 		gamepad=readGamepad1();
 		consoleLogHex(gamepad);
 		// Update square coords
 		// Draw square
-		drawRect(x, y, 10, 10, GREEN);
+		//drawRect(x, y, 10, 10, GREEN);
+		drawRect(10, 20, 30, 30, GREEN);
 	}
 	
 	return 0;

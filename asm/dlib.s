@@ -10,6 +10,8 @@
 .export _consoleLogChar
 .export _consoleLogStr
 .export _drawRect
+.export _readGamepad1
+.export _readGamepad2
 
 .bss
 _xcoord: .byt $00
@@ -358,3 +360,38 @@ loop:
 	BNE paint_row
 	RTS
 .endproc
+
+.proc _readGamepad1:near
+	; 1. write into $DF9C
+	STA $DF9C
+	; 2. write into $DF9D 8 times
+	STA $DF9D
+	STA $DF9D
+	STA $DF9D
+	STA $DF9D
+	STA $DF9D
+	STA $DF9D
+	STA $DF9D
+	STA $DF9D
+	; 3. read first controller
+	LDA $DF9C
+	RTS
+.endproc
+
+.proc _readGamepad2:near
+	; 1. write into $DF9C
+	STA $DF9C
+	; 2. write into $DF9D 8 times
+	STA $DF9D
+	STA $DF9D
+	STA $DF9D
+	STA $DF9D
+	STA $DF9D
+	STA $DF9D
+	STA $DF9D
+	STA $DF9D
+	; 3. read second controller
+	LDA $DF9D
+	RTS
+.endproc
+
