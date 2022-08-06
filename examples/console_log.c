@@ -1,5 +1,5 @@
 /*
- * Hello Durango
+ * Console log
  * To manually build:
  * cc65 -I ../inc --cpu 6502 console_log.c -o console_log.s && ca65 -t none console_log.s -o console_log.o && ld65 -C ../cfg/durango16k.cfg console_log.o ../bin/vectors.o ../bin/durango.lib ../bin/sbc.lib -o console_log.bin
  */

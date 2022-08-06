@@ -9,6 +9,12 @@
 .export _consoleLogHex
 .export _consoleLogChar
 .export _consoleLogStr
+.export _drawRect
+
+.bss
+_xcoord: .byt $00
+_ycoord: .byt $00
+_current_color: .byt $00
 
 .zeropage
 _screen_pointer: .res 2, $00 ;  Reserve a local zero page pointer for screen position
@@ -99,7 +105,7 @@ _data_pointer: .res 2, $00 ;  Reserve a local zero page pointer for data positio
     STA _screen_pointer+1
 
     ; Calculate X coord
-    ; Load y coord
+    ; Load x coord
     LDY #$02
     LDA (sp), Y
     ; Divide x coord by 2 (2 pixel each byte)
@@ -206,4 +212,149 @@ loop:
 	BNE loop
 	end:
     RTS
+.endproc
+
+; Converts x,y coord into memory pointer.
+; _xcoord, _ycoord pixel coords
+; _screen_pointer _screen_pointer+1 current video memory pointer
+.proc _convert_coords_to_mem:near
+    ; Init video pointer
+    LDA #$60
+    STA _screen_pointer+1
+    LDA #$00
+    STA _screen_pointer
+    ; Clear X reg
+    LDX #$00
+    ; Multiply y coord by 64 (64 bytes each row)
+    LDA _ycoord
+    ASL
+    ; Also shift more sig byte
+    TAY
+    TXA
+    ROL
+    TAX
+    TYA
+    ; Shift less sig byte
+    ASL
+    ; Also shift more sig byte
+    TAY
+    TXA
+    ROL
+    TAX
+    TYA
+    ; Shift less sig byte
+    ASL
+    ; Also shift more sig byte
+    TAY
+    TXA
+    ROL
+    TAX
+    TYA
+    ; Shift less sig byte
+    ASL
+    ; Also shift more sig byte
+    TAY
+    TXA
+    ROL
+    TAX
+    TYA
+    ; Shift less sig byte
+    ASL
+    ; Also shift more sig byte
+    TAY
+    TXA
+    ROL
+    TAX
+    TYA
+    ; Shift less sig byte
+    ASL
+    ; Also shift more sig byte
+    TAY
+    TXA
+    ROL
+    TAX
+    TYA
+    ; Shift less sig byte
+    ; Add to initial memory address, and save it
+    CLC
+    ADC _screen_pointer
+    STA _screen_pointer
+
+    ; If overflow, add one to more sig byte
+    BCC conv_coor_mem_01
+    INX
+    conv_coor_mem_01:
+    ; Add calculated offset to _screen_pointer+1 (more sig)
+    TXA
+    CLC
+    ADC _screen_pointer+1
+    STA _screen_pointer+1
+
+    ; Calculate X coord
+    ; Divide x coord by 2 (2 pixel each byte)
+    LDA _xcoord
+    LSR
+    ; Add to memory address
+    CLC
+    ADC _screen_pointer
+    ; Store in video memory position
+    STA _screen_pointer
+    ; If overflow, increment left byte
+    BCC conv_coor_mem_02
+    INC _screen_pointer+1
+    conv_coor_mem_02:
+    RTS
+.endproc
+
+.proc _drawRect:near
+	; Load x coord
+    LDY #$04
+    LDA (sp), Y
+	STA _xcoord
+	; Load y coord
+    LDY #$03
+    LDA (sp), Y
+	STA _ycoord
+	; Load color
+	LDY #$00
+    LDA (sp), Y
+	STA _current_color
+	; Convert to mem pointer
+	JSR _convert_coords_to_mem
+	; Store height temporaly in data_pointer
+	LDY #$01
+	LDA (sp), Y
+	STA _data_pointer
+	; Store width temporaly in data_pointer+1
+	LDY #$02
+	LDA (sp), Y
+	STA _data_pointer+1
+
+	; Load height in x
+	LDX _data_pointer
+	paint_row:
+	; Divide width by 2
+	LDA _data_pointer+1
+	LSR
+	; Store it in Y
+	TAY
+	; Load current color in A
+	LDA _current_color
+	; Draw as many pixels as Y register says
+	paint:
+	STA (_screen_pointer), Y
+	DEY
+	BNE paint
+	STA (_screen_pointer), Y
+	; Next row
+	LDA _screen_pointer
+	CLC
+	ADC #$40
+	STA _screen_pointer
+	BCC skip_upper
+	INC _screen_pointer+1
+	skip_upper:
+	DEX
+	BNE paint_row
+	RTS
 .endproc
