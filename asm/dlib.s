@@ -180,7 +180,12 @@ loop:
 .endproc
 
 .proc  _consoleLogChar: near
-    RTS
+    ; Set virtual serial port in ascii mode
+	LDX #$01
+	STX $df94
+	; Send value to virtual serial port
+	STA $df93
+	RTS
 .endproc
 
 .proc  _consoleLogStr: near
