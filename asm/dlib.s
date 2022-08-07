@@ -312,10 +312,6 @@ loop:
 .endproc
 
 .proc _drawRect:near
-    ; Set virtual serial port in hex mode
-    LDX #$00
-    STX $df94
-    
     ; Load x coord
     LDY #$04
     LDA (sp), Y
@@ -347,10 +343,6 @@ loop:
     LSR
     ; Store it in Y
     TAY
-    
-    ; Send value to virtual serial port
-    STY $df93
-    
     ; Load current color in A
     LDA _current_color
     ; Draw as many pixels as Y register says
