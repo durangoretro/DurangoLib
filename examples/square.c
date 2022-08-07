@@ -43,6 +43,8 @@ int main(){
 		}		
 		// Draw square
 		drawRect(x, y, 10, 10, GREEN);
+		
+		waitFrames(1);
 	}
 	
 	return 0;

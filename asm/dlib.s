@@ -19,6 +19,7 @@ _xcoord: .byt $00
 _ycoord: .byt $00
 _current_color: .byt $00
 _temp1: .byt $00
+_temp2: .byt $00
 
 .zeropage
 _screen_pointer: .res 2, $00 ;  Reserve a local zero page pointer for screen position
@@ -175,46 +176,46 @@ loop:
 
     ; Iterate over more significative memory address
     INC _screen_pointer+1 ; Increment memory pointer Hi address
-	LDA #$80 ; Compare with end memory position
-	CMP _screen_pointer+1
+    LDA #$80 ; Compare with end memory position
+    CMP _screen_pointer+1
     BNE loop2
     RTS
 .endproc
 
 .proc  _consoleLogHex: near
     ; Set virtual serial port in hex mode
-	LDX #$00
-	STX $df94
-	; Send value to virtual serial port
-	STA $df93
-	RTS
+    LDX #$00
+    STX $df94
+    ; Send value to virtual serial port
+    STA $df93
+    RTS
 .endproc
 
 .proc  _consoleLogChar: near
     ; Set virtual serial port in ascii mode
-	LDX #$01
-	STX $df94
-	; Send value to virtual serial port
-	STA $df93
-	RTS
+    LDX #$01
+    STX $df94
+    ; Send value to virtual serial port
+    STA $df93
+    RTS
 .endproc
 
 .proc  _consoleLogStr: near
-	; Get data pointer from procedure args
+    ; Get data pointer from procedure args
     STA _data_pointer
     STX _data_pointer+1
-	; Set virtual serial port in ascii mode
-	LDA #$01
-	STA $df94
-	; Iterator
-	LDY #$00
-	loop:
-	LDA (_data_pointer),Y
-	BEQ end
-	STA $df93
-	INY
-	BNE loop
-	end:
+    ; Set virtual serial port in ascii mode
+    LDA #$01
+    STA $df94
+    ; Iterator
+    LDY #$00
+    loop:
+    LDA (_data_pointer),Y
+    BEQ end
+    STA $df93
+    INY
+    BNE loop
+    end:
     RTS
 .endproc
 
@@ -311,6 +312,10 @@ loop:
 .endproc
 
 .proc _drawRect:near
+    ; Set virtual serial port in hex mode
+    LDX #$00
+    STX $df94
+    
     ; Load x coord
     LDY #$04
     LDA (sp), Y
@@ -325,23 +330,27 @@ loop:
     STA _current_color
     ; Convert to mem pointer
     JSR _convert_coords_to_mem
-    ; Store height temporaly in data_pointer
+    ; Store height temporaly in temp1
     LDY #$01
     LDA (sp), Y
-    STA _data_pointer
-    ; Store width temporaly in data_pointer+1
+    STA _temp1
+    ; Store width temporaly in temp2
     LDY #$02
     LDA (sp), Y
-    STA _data_pointer+1
+    STA _temp2
 
     ; Load height in x
-    LDX _data_pointer
+    LDX _temp1
     paint_row:
     ; Divide width by 2
-    LDA _data_pointer+1
+    LDA _temp2
     LSR
     ; Store it in Y
     TAY
+    
+    ; Send value to virtual serial port
+    STY $df93
+    
     ; Load current color in A
     LDA _current_color
     ; Draw as many pixels as Y register says
