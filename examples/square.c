@@ -24,6 +24,7 @@ int main(){
 		drawRect(x, y, 10, 10, YELLOW);
 		// Read gamepad
 		gamepad=readGamepad1();
+		// Update square coords
 		if(gamepad & BUTTON_DOWN) {
 			y++;
 			y++;
@@ -32,11 +33,16 @@ int main(){
 			y--;
 			y--;
 		}
-		
-		// Update square coords
+		else if(gamepad & BUTTON_LEFT) {
+			x--;
+			x--;
+		}
+		else if(gamepad & BUTTON_RIGHT) {
+			x++;
+			x++;
+		}		
 		// Draw square
 		drawRect(x, y, 10, 10, GREEN);
-		//drawRect(10, 20, 30, 30, GREEN);
 	}
 	
 	return 0;
