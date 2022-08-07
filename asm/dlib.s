@@ -13,6 +13,7 @@
 .export _drawRect
 .export _readGamepad1
 .export _readGamepad2
+.export _drawPixel
 
 .bss
 _xcoord: .byt $00
@@ -440,10 +441,22 @@ loop:
     paint:
     ; Convert to mem pointer
     JSR _convert_coords_to_mem
-    
-    
+    PLP
+	BCC left2
+    right2:
+	LDA #$F0
+	AND (_screen_pointer), Y
+	STA (_screen_pointer), Y
+	CLC
+    BCC end2
+	left2:
+    LDA #$0F
+	AND (_screen_pointer), Y
+	STA (_screen_pointer), Y
+	end2:
     ; Draw actual pixel
-    LDY #$00
+    LDA _current_color
+	ORA  (_screen_pointer), Y
     STA (_screen_pointer), Y
 
     ; Remove args from stack
