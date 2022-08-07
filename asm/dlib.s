@@ -14,8 +14,13 @@
 .export _readGamepad1
 .export _readGamepad2
 .export _drawPixel
+.export _disableDoubleBuffer
+.export _enableDoubleBuffer
+.export _swapBuffers
 
 .bss
+_draw_buffer: .byt $00
+_display_buffer: .byt $00
 _xcoord: .byt $00
 _ycoord: .byt $00
 _current_color: .byt $00
@@ -36,7 +41,7 @@ _data_pointer: .res 2, $00 ;  Reserve a local zero page pointer for data positio
 
 .proc _drawPixelPair: near
 	; Initialize screen position
-    LDA #$60
+    LDA _draw_buffer
     STA _screen_pointer+1
     LDA #$00
     STA _screen_pointer
@@ -161,7 +166,7 @@ _data_pointer: .res 2, $00 ;  Reserve a local zero page pointer for data positio
 
 .proc _fillScreen: near
 	; Init video pointer
-    LDX #$60
+    LDX _draw_buffer
     STX _screen_pointer+1
     LDX #$00
     STX _screen_pointer
@@ -225,7 +230,7 @@ loop:
 ; _screen_pointer _screen_pointer+1 current video memory pointer
 .proc _convert_coords_to_mem:near
     ; Init video pointer
-    LDA #$60
+    LDA _draw_buffer
     STA _screen_pointer+1
     LDA #$00
     STA _screen_pointer
@@ -464,3 +469,41 @@ loop:
     RTS
 .endproc
 
+.proc _disableDoubleBuffer: near
+	LDA #$60
+	STA _draw_buffer
+	STA _display_buffer
+	LDA #$3c
+	STA $df80
+    RTS
+.endproc
+
+.proc _enableDoubleBuffer: near
+	LDX #$40
+	LDY #$60
+	STX _draw_buffer
+	STY _display_buffer
+	LDA #$3c
+	STA $df80
+    RTS
+.endproc
+
+.proc _swapBuffers: near
+	LDX _display_buffer
+	LDY _draw_buffer
+	STX _draw_buffer
+	STY _display_buffer
+	LDA $df80
+	AND #$c0
+	; If Y==$60
+	CPY #$60
+	BNE else
+	ORA #$03
+	CLC
+	BCC endif
+	else:
+	ORA #$02
+	endif:
+	STA $df80
+    RTS
+.endproc

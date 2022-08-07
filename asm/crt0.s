@@ -5,7 +5,7 @@
 ; Startup code for cc65 (Single Board Computer version)
 
 .export   _init, _exit
-.import   _main
+.import   _main, _disableDoubleBuffer
 
 .export   __STARTUP__ : absolute = 1        ; Mark as startup
 .import __STACKSTART__, __STACKSIZE__
@@ -50,6 +50,7 @@ _init:
 ; Initialize Durango Video
           LDA #$3c
           STA $df80
+          JSR _disableDoubleBuffer
 ; ---------------------------------------------------------------------------
 ; Call main()
 

@@ -90,4 +90,18 @@ extern unsigned char __fastcall__ readGamepad1(void);
  */
 extern unsigned char __fastcall__ readGamepad2(void);
 
+/**
+ * Disable double buffering. Default status.
+ */
+extern void __fastcall__ disableDoubleBuffer(void);
+/**
+ * Enable screen double buffering.
+ */
+extern void __fastcall__ enableDoubleBuffer(void);
+
+/**
+ * Swap screen buffers.
+ */
+extern void __fastcall__ swapBuffers(void);
+
 #endif
