@@ -11,17 +11,17 @@
 int main(){
 	// Draw some pixels
 	drawPixel(0, 0, ORANGE);
-	drawPixel(0, 0, YELLOW);
-	drawPixel(0, 0, LAVENDER_ROSE);
-	drawPixel(0, 0, CIAN);
-	drawPixel(0, 0, PINK_FLAMINGO);
-	drawPixel(0, 0, WHITE);
+	drawPixel(1, 0, YELLOW);
+	drawPixel(2, 0, LAVENDER_ROSE);
+	drawPixel(3, 0, CIAN);
+	drawPixel(4, 0, PINK_FLAMINGO);
+	drawPixel(5, 0, WHITE);
 
 
 	// You can also draw Pixels in paris, which is faster
-    drawPixelPair(0, 2, RED);
-	drawPixelPair(2, 2, GREEN);
-	drawPixelPair(4, 2, BLUE);
+    drawPixelPair(0, 1, RED);
+	drawPixelPair(2, 1, GREEN);
+	drawPixelPair(4, 1, BLUE);
     
 	return 0;
 }
