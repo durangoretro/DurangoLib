@@ -494,16 +494,19 @@ loop:
 	STX _draw_buffer
 	STY _display_buffer
 	LDA $df80
-	AND #$c0
+	AND #$cf
 	; If Y==$60
 	CPY #$60
 	BNE else
-	ORA #$03
+	ORA #$30
 	CLC
 	BCC endif
 	else:
-	ORA #$02
+	ORA #$20
 	endif:
+	; Wait for vsync
+	BIT $DF88
+    BVC endif
 	STA $df80
     RTS
 .endproc
