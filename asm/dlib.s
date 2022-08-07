@@ -1,4 +1,5 @@
 .import incsp3
+.import incsp5
 .importzp  sp
 
 .export _setVideoMode
@@ -17,6 +18,7 @@
 _xcoord: .byt $00
 _ycoord: .byt $00
 _current_color: .byt $00
+_temp1: .byt $00
 
 .zeropage
 _screen_pointer: .res 2, $00 ;  Reserve a local zero page pointer for screen position
@@ -128,10 +130,10 @@ _data_pointer: .res 2, $00 ;  Reserve a local zero page pointer for data positio
     LDY #$00
     STA (_screen_pointer), Y
 
-	; Remove args from stack
-	JSR incsp3
+    ; Remove args from stack
+    JSR incsp3
 
-	RTS
+    RTS
 .endproc
 
 ; Wait for vsync.
@@ -309,89 +311,142 @@ loop:
 .endproc
 
 .proc _drawRect:near
-	; Load x coord
+    ; Load x coord
     LDY #$04
     LDA (sp), Y
-	STA _xcoord
-	; Load y coord
+    STA _xcoord
+    ; Load y coord
     LDY #$03
     LDA (sp), Y
-	STA _ycoord
-	; Load color
-	LDY #$00
+    STA _ycoord
+    ; Load color
+    LDY #$00
     LDA (sp), Y
-	STA _current_color
-	; Convert to mem pointer
-	JSR _convert_coords_to_mem
-	; Store height temporaly in data_pointer
-	LDY #$01
-	LDA (sp), Y
-	STA _data_pointer
-	; Store width temporaly in data_pointer+1
-	LDY #$02
-	LDA (sp), Y
-	STA _data_pointer+1
+    STA _current_color
+    ; Convert to mem pointer
+    JSR _convert_coords_to_mem
+    ; Store height temporaly in data_pointer
+    LDY #$01
+    LDA (sp), Y
+    STA _data_pointer
+    ; Store width temporaly in data_pointer+1
+    LDY #$02
+    LDA (sp), Y
+    STA _data_pointer+1
 
-	; Load height in x
-	LDX _data_pointer
-	paint_row:
-	; Divide width by 2
-	LDA _data_pointer+1
-	LSR
-	; Store it in Y
-	TAY
-	; Load current color in A
-	LDA _current_color
-	; Draw as many pixels as Y register says
-	paint:
-	STA (_screen_pointer), Y
-	DEY
-	BNE paint
-	STA (_screen_pointer), Y
-	; Next row
-	LDA _screen_pointer
-	CLC
-	ADC #$40
-	STA _screen_pointer
-	BCC skip_upper
-	INC _screen_pointer+1
-	skip_upper:
-	DEX
-	BNE paint_row
-	RTS
+    ; Load height in x
+    LDX _data_pointer
+    paint_row:
+    ; Divide width by 2
+    LDA _data_pointer+1
+    LSR
+    ; Store it in Y
+    TAY
+    ; Load current color in A
+    LDA _current_color
+    ; Draw as many pixels as Y register says
+    paint:
+    STA (_screen_pointer), Y
+    DEY
+    BNE paint
+    STA (_screen_pointer), Y
+    ; Next row
+    LDA _screen_pointer
+    CLC
+    ADC #$40
+    STA _screen_pointer
+    BCC skip_upper
+    INC _screen_pointer+1
+    skip_upper:
+    DEX
+    BNE paint_row
+
+    ; Remove args from stack
+    JSR incsp5
+    RTS
 .endproc
 
 .proc _readGamepad1:near
-	; 1. write into $DF9C
-	STA $DF9C
-	; 2. write into $DF9D 8 times
-	STA $DF9D
-	STA $DF9D
-	STA $DF9D
-	STA $DF9D
-	STA $DF9D
-	STA $DF9D
-	STA $DF9D
-	STA $DF9D
-	; 3. read first controller
-	LDA $DF9C
-	RTS
+    ; 1. write into $DF9C
+    STA $DF9C
+    ; 2. write into $DF9D 8 times
+    STA $DF9D
+    STA $DF9D
+    STA $DF9D
+    STA $DF9D
+    STA $DF9D
+    STA $DF9D
+    STA $DF9D
+    STA $DF9D
+    ; 3. read first controller
+    LDA $DF9C
+    RTS
 .endproc
 
 .proc _readGamepad2:near
-	; 1. write into $DF9C
-	STA $DF9C
-	; 2. write into $DF9D 8 times
-	STA $DF9D
-	STA $DF9D
-	STA $DF9D
-	STA $DF9D
-	STA $DF9D
-	STA $DF9D
-	STA $DF9D
-	STA $DF9D
-	; 3. read second controller
-	LDA $DF9D
-	RTS
+    ; 1. write into $DF9C
+    STA $DF9C
+    ; 2. write into $DF9D 8 times
+    STA $DF9D
+    STA $DF9D
+    STA $DF9D
+    STA $DF9D
+    STA $DF9D
+    STA $DF9D
+    STA $DF9D
+    STA $DF9D
+    ; 3. read second controller
+    LDA $DF9D
+    RTS
+.endproc
+
+.proc _drawPixel: near
+    ; Load x coord
+    LDY #$02
+    LDA (sp), Y
+    STA _xcoord
+    ; Load y coord
+    LDY #$01
+    LDA (sp), Y
+    STA _ycoord
+    ; Load color
+    LDY #$00
+    LDA (sp), Y
+    STA _current_color
+    
+    ; Check if left or right pixel
+    LDA _xcoord
+    ROR
+    PHP
+    BCC left
+    right:
+    LDX _xcoord
+    DEX
+    STX _xcoord
+    LDA #$0F
+    STA _temp1
+    LDA _current_color
+    AND _temp1
+    STA _current_color
+    CLC
+    BCC paint
+    left:
+    LDA #$F0
+    STA _temp1
+    LDA _current_color
+    AND _temp1
+    STA _current_color
+    paint:
+    ; Convert to mem pointer
+    JSR _convert_coords_to_mem
+    
+    
+    ; Draw actual pixel
+    LDY #$00
+    STA (_screen_pointer), Y
+
+    ; Remove args from stack
+    JSR incsp3
+    RTS
 .endproc
 

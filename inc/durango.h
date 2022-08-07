@@ -22,6 +22,14 @@ https://opensource.org/licenses/MIT.
 #define BUTTON_RIGHT 0x01
 
 /**
+ * Draw a Pixel on Screen
+ * @param x: X Coord in pixels. The x coordinate is from left to Rigth.
+ * @param y: Y Coord in pixels. The Y coordinate is from up to Down.
+ * @param color: color to use. Check the video.h file for the macros for the 16 colors.
+ */
+extern void __cdecl__ drawPixel(unsigned char x, unsigned char y, unsigned char color);
+
+/**
  * Draw a Pixel Pair on Screen
  * @param x: X Coord in pixels. The x coordinate is from left to Rigth.
  * @param y: Y Coord in pixels. The Y coordinate is from up to Down.
