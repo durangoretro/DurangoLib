@@ -1,9 +1,11 @@
 /*
  * Hello Durango
  * To manually build:
- * cc65 -I ../inc --cpu 6502 fill_screen.c -o fill_screen.s
- * ca65 -t none fill_screen.s -o fill_screen.o
- * ld65 -C ../cfg/durango16k.cfg fill_screen.o ../bin/vectors.o ../bin/durango.lib ../bin/sbc.lib -o fill_screen.bin
+ *  Use Makefile after compile the lib:
+ *  cd ../..
+ *  make all
+ *  cd examples/fillscreen
+ *  make
  */
 
 #include <durango.h>
