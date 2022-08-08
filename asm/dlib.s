@@ -341,6 +341,40 @@ loop:
     LDY #$00
     LDA (sp), Y
     STA _current_color
+    ; Store height temporaly in temp1
+    LDY #$01
+    LDA (sp), Y
+    STA _temp1
+    ; Store width temporaly in temp2
+    LDY #$02
+    LDA (sp), Y
+    STA _temp2
+    ; Convert to mem pointer
+    JSR _convert_coords_to_mem
+    
+    row_loop:
+    JSR _drawCurrentPosition
+    DEC _temp2
+    BNE row_loop
+    
+    ; Remove args from stack
+    JSR incsp5
+    RTS
+.endproc
+
+.proc _drawRectz:near
+    ; Load x coord
+    LDY #$04
+    LDA (sp), Y
+    STA _xcoord
+    ; Load y coord
+    LDY #$03
+    LDA (sp), Y
+    STA _ycoord
+    ; Load color
+    LDY #$00
+    LDA (sp), Y
+    STA _current_color
     ; Convert to mem pointer
     JSR _convert_coords_to_mem
     ; Store height temporaly in temp1
@@ -420,6 +454,8 @@ loop:
 .endproc
 
 .proc _drawCurrentPosition: near
+lda #$00
+sta $df94
     LDY #$00
     LDA _screen_pointer+2
     BMI right
@@ -452,15 +488,20 @@ loop:
     ; Increment pixel
     LDA _screen_pointer+3
     CLC
-    ADC #$80
+    ADC #$80    
     STA _screen_pointer+3
+STA $df93
+    BCC end2
     LDX _screen_pointer
+    CLC
     INX
     STX _screen_pointer
+STX $df93
     BCC end2
     LDX _screen_pointer+1
     INX
     STX _screen_pointer+1
+STX $df93
     end2:
     RTS
 .endproc
