@@ -485,8 +485,8 @@ loop:
 .endproc
 
 .proc _enableDoubleBuffer: near
-	LDX #$40
-	LDY #$60
+	LDX #$40 ; Draw buffer
+	LDY #$60 ; Display buffer
 	STX _draw_buffer
 	STY _display_buffer
 	LDA #$3c
@@ -495,17 +495,14 @@ loop:
 .endproc
 
 .proc _swapBuffers: near
-LDA #$00
-STA $df94
 	LDX _display_buffer
 	LDY _draw_buffer
 	STX _draw_buffer
 	STY _display_buffer
 	LDA $df80
 	AND #$cf
-	; If Y==$60
-	CPX #$60
-STX $df93
+	; If display (Y)==$60
+	CPY #$60
 	BNE else
 	ORA #$30
 	CLC
