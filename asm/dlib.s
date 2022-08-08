@@ -28,7 +28,7 @@ _temp1: .byt $00
 _temp2: .byt $00
 
 .zeropage
-_screen_pointer: .res 2, $00 ;  Reserve a local zero page pointer for screen position
+_screen_pointer: .res 3, $00 ;  Reserve a local zero page pointer for screen position
 _data_pointer: .res 2, $00 ;  Reserve a local zero page pointer for data position
 
 
@@ -167,8 +167,7 @@ _data_pointer: .res 2, $00 ;  Reserve a local zero page pointer for data positio
 .proc _fillScreen: near
 	; Init video pointer
     LDX _draw_buffer
-    STX $df93
-	STX _screen_pointer+1
+    STX _screen_pointer+1
     LDX #$00
     STX _screen_pointer
 	TAX
@@ -240,6 +239,12 @@ loop:
     STA _screen_pointer+1
     LDA #$00
     STA _screen_pointer
+    ; Check left/right
+    LDA _xcoord
+    AND #$01
+    ROR
+    ROR
+    STA _screen_pointer+2
     ; Clear X reg
     LDX #$00
     ; Multiply y coord by 64 (64 bytes each row)
@@ -413,6 +418,41 @@ loop:
     RTS
 .endproc
 
+.proc _drawCurrentPosition: near
+    LDY #$00
+    LDA _screen_pointer+2
+    BMI right
+    
+    left:
+    ; Clear pixel
+    LDA #$0F    
+	AND (_screen_pointer), Y
+	STA (_screen_pointer), Y
+    ; Clear color. Store in X
+    LDA _current_color
+    AND #$F0
+    TAX
+    CLC
+    BCC endif
+    
+    right:
+    ; Clear pixel
+	LDA #$F0
+	AND (_screen_pointer), Y
+	STA (_screen_pointer), Y
+	; Clear color. Store in X
+    LDA _current_color
+    AND #$0F
+    TAX
+	
+	endif:
+    ; Draw actual pixel
+    TXA
+	ORA  (_screen_pointer), Y
+    STA (_screen_pointer), Y
+    RTS
+.endproc
+
 .proc _drawPixel: near
     ; Load x coord
     LDY #$02
@@ -427,48 +467,11 @@ loop:
     LDA (sp), Y
     STA _current_color
     
-    ; Check if left or right pixel
-    LDA _xcoord
-    ROR
-    PHP
-    BCC left
-    right:
-    LDX _xcoord
-    DEX
-    STX _xcoord
-    LDA #$0F
-    STA _temp1
-    LDA _current_color
-    AND _temp1
-    STA _current_color
-    CLC
-    BCC paint
-    left:
-    LDA #$F0
-    STA _temp1
-    LDA _current_color
-    AND _temp1
-    STA _current_color
-    paint:
     ; Convert to mem pointer
     JSR _convert_coords_to_mem
-    PLP
-	BCC left2
-    right2:
-	LDA #$F0
-	AND (_screen_pointer), Y
-	STA (_screen_pointer), Y
-	CLC
-    BCC end2
-	left2:
-    LDA #$0F
-	AND (_screen_pointer), Y
-	STA (_screen_pointer), Y
-	end2:
+        
     ; Draw actual pixel
-    LDA _current_color
-	ORA  (_screen_pointer), Y
-    STA (_screen_pointer), Y
+    JSR _drawCurrentPosition
 
     ; Remove args from stack
     JSR incsp3
