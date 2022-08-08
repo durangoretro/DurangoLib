@@ -352,13 +352,19 @@ loop:
     LDY #$02
     LDA (sp), Y
     STA _temp2
+	PHA
     ; Convert to mem pointer
     JSR _convert_coords_to_mem
     row_loop:
     JSR _drawCurrentPosition
     DEC _temp2
     BNE row_loop
-    
+    PLA
+    STA _temp2
+	DEC _temp1
+	JSR _nextRow
+	BNE row_loop
+	
     ; Remove args from stack
     JSR incsp5
     RTS
@@ -526,6 +532,18 @@ loop:
     ; Remove args from stack
     JSR incsp3
     RTS
+.endproc
+
+.proc _nextRow: near
+	; Next row
+    LDA _screen_pointer
+    CLC
+    ADC #$40
+    STA _screen_pointer
+    BCC skip_upper
+    INC _screen_pointer+1
+    skip_upper:
+	RTS
 .endproc
 
 .proc _disableDoubleBuffer: near
