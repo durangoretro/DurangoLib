@@ -167,10 +167,16 @@ _data_pointer: .res 2, $00 ;  Reserve a local zero page pointer for data positio
 .proc _fillScreen: near
 	; Init video pointer
     LDX _draw_buffer
-    STX _screen_pointer+1
+    STX $df93
+	STX _screen_pointer+1
     LDX #$00
     STX _screen_pointer
 	TAX
+	; Calculate end memory position into temp1
+	LDA _screen_pointer+1
+	CLC
+	ADC #$20
+	STA _temp1
 loop2:
 	TXA
 	; Iterate over less significative memory address
@@ -182,7 +188,7 @@ loop:
 
     ; Iterate over more significative memory address
     INC _screen_pointer+1 ; Increment memory pointer Hi address
-    LDA #$80 ; Compare with end memory position
+    LDA _temp1 ; Compare with end memory position
     CMP _screen_pointer+1
     BNE loop2
     RTS
@@ -191,7 +197,7 @@ loop:
 .proc  _consoleLogHex: near
     ; Set virtual serial port in hex mode
     LDX #$00
-    STX $df94
+	STX $df94
     ; Send value to virtual serial port
     STA $df93
     RTS
@@ -489,6 +495,8 @@ loop:
 .endproc
 
 .proc _swapBuffers: near
+LDA #$00
+STA $df94
 	LDX _display_buffer
 	LDY _draw_buffer
 	STX _draw_buffer
@@ -496,7 +504,8 @@ loop:
 	LDA $df80
 	AND #$cf
 	; If Y==$60
-	CPY #$60
+	CPX #$60
+STX $df93
 	BNE else
 	ORA #$30
 	CLC
