@@ -26,6 +26,7 @@ _ycoord: .byt $00
 _current_color: .byt $00
 _temp1: .byt $00
 _temp2: .byt $00
+_temp3: .byt $00
 
 .zeropage
 _screen_pointer: .res 3, $00 ;  Reserve a local zero page pointer for screen position
@@ -242,9 +243,11 @@ loop:
     ; Check left/right
     LDA _xcoord
     AND #$01
+	CLC
     ROR
     ROR
     STA _screen_pointer+2
+
     ; Clear X reg
     LDX #$00
     ; Multiply y coord by 64 (64 bytes each row)
@@ -329,7 +332,7 @@ loop:
 .endproc
 
 .proc _drawRect:near
-    ; Load x coord
+	; Load x coord
     LDY #$04
     LDA (sp), Y
     STA _xcoord
@@ -351,7 +354,6 @@ loop:
     STA _temp2
     ; Convert to mem pointer
     JSR _convert_coords_to_mem
-    
     row_loop:
     JSR _drawCurrentPosition
     DEC _temp2
@@ -454,8 +456,6 @@ loop:
 .endproc
 
 .proc _drawCurrentPosition: near
-lda #$00
-sta $df94
     LDY #$00
     LDA _screen_pointer+2
     BMI right
@@ -486,22 +486,19 @@ sta $df94
     STA (_screen_pointer), Y
 
     ; Increment pixel
-    LDA _screen_pointer+3
+    LDA _screen_pointer+2
     CLC
-    ADC #$80    
-    STA _screen_pointer+3
-STA $df93
-    BCC end2
+    ADC #$80
+    STA _screen_pointer+2
+	BCC end2
     LDX _screen_pointer
     CLC
     INX
     STX _screen_pointer
-STX $df93
     BCC end2
     LDX _screen_pointer+1
     INX
     STX _screen_pointer+1
-STX $df93
     end2:
     RTS
 .endproc
@@ -571,4 +568,36 @@ STX $df93
     BVC endif
 	STA $df80
     RTS
+.endproc
+
+.proc _debug:near
+    PHP
+	PHA
+
+	LDA #$00
+	STA $df94
+	LDA _screen_pointer
+	STA $df93
+	LDA _screen_pointer+1
+	STA $df93
+	LDA _screen_pointer+2
+	STA $df93
+	LDA _temp1
+	STA $df93
+	LDA _temp2
+	STA $df93
+	LDA _temp3
+	STA $df93
+
+	LDA #$01
+	STA $df94
+	LDA #$0a
+	STA $df93
+
+	LDA #$ff
+	STA $df94
+
+	PLA
+	PLP
+	RTS
 .endproc
