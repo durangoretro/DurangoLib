@@ -384,6 +384,7 @@ loop:
     RTS
 .endproc
 
+
 .proc _readGamepad1:near
     ; 1. write into $DF9C
     STA $DF9C
@@ -422,7 +423,6 @@ loop:
     LDY #$00
     LDA _screen_pointer+2
     BMI right
-    
     left:
     ; Clear pixel
     LDA #$0F    
@@ -434,7 +434,6 @@ loop:
     TAX
     CLC
     BCC endif
-    
     right:
     ; Clear pixel
 	LDA #$F0
@@ -444,12 +443,25 @@ loop:
     LDA _current_color
     AND #$0F
     TAX
-	
 	endif:
     ; Draw actual pixel
     TXA
 	ORA  (_screen_pointer), Y
     STA (_screen_pointer), Y
+
+    ; Increment pixel
+    LDA _screen_pointer+3
+    CLC
+    ADC #$80
+    STA _screen_pointer+3
+    LDX _screen_pointer
+    INX
+    STX _screen_pointer
+    BCC end2
+    LDX _screen_pointer+1
+    INX
+    STX _screen_pointer+1
+    end2:
     RTS
 .endproc
 
