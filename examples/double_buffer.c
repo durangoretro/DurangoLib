@@ -11,17 +11,11 @@ unsigned char x, y, gamepad;
 int main(){
 	// Initialize coords
 	x = 2;
-	y = 2;	
+	y = 2;
 
 	enableDoubleBuffer();
 
-	// Draw background color
-	fillScreen(YELLOW);
-
-
 	while(1) {
-		// Wait for VSYNC
-//		waitVsync();
 		// Draw background color
 		fillScreen(YELLOW);
 		// Read gamepad
@@ -42,12 +36,10 @@ int main(){
 		else if(gamepad & BUTTON_RIGHT) {
 			x++;
 			x++;
-		}		
+		}
 		// Draw square
 		drawRect(x, y, 10, 10, GREEN);
-		swapBuffers();		
-
-		waitFrames(1);
+		swapBuffers();
 	}
 	
 	return 0;
