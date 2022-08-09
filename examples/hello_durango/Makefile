@@ -12,7 +12,7 @@ hello_durango.bin: $(BUILD_DIR)/ $(BUILD_DIR)/hello_durango.o
 	ld65 $(LINKER_OPT) $(BUILD_DIR)/hello_durango.o $(LINKER_LIBS) -o hello_durango.bin 
 
 hello_durango_16k.bin: $(BUILD_DIR)/ $(BUILD_DIR)/hello_durango.o
-	ld65 $(LINKER_OPT_16) $(BUILD_DIR)/hello_durango.o $(LINKER_LIBS) -o hello_durango.bin
+	ld65 $(LINKER_OPT_16) $(BUILD_DIR)/hello_durango.o $(LINKER_LIBS) -o hello_durango_16k.bin
 
 $(BUILD_DIR)/hello_durango.o: $(BUILD_DIR)/hello_durango.s
 	ca65 $(ASM_OPT) $(BUILD_DIR)/hello_durango.s -o $(BUILD_DIR)/hello_durango.o

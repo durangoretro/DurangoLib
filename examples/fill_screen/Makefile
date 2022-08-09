@@ -12,7 +12,7 @@ fill_screen.bin: $(BUILD_DIR)/ $(BUILD_DIR)/fill_screen.o
 	ld65 $(LINKER_OPT) $(BUILD_DIR)/fill_screen.o $(LINKER_LIBS) -o fill_screen.bin 
 
 fill_screen_16k.bin: $(BUILD_DIR)/ $(BUILD_DIR)/fill_screen.o
-	ld65 $(LINKER_OPT_16) $(BUILD_DIR)/fill_screen.o $(LINKER_LIBS) -o fill_screen.bin
+	ld65 $(LINKER_OPT_16) $(BUILD_DIR)/fill_screen.o $(LINKER_LIBS) -o fill_screen_16k.bin
 
 $(BUILD_DIR)/fill_screen.o: $(BUILD_DIR)/fill_screen.s
 	ca65 $(ASM_OPT) $(BUILD_DIR)/fill_screen.s -o $(BUILD_DIR)/fill_screen.o
