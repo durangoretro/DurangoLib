@@ -5,7 +5,7 @@ license that can be found in the LICENSE file or at
 https://opensource.org/licenses/MIT.
 */
 
-/** @file video.h */
+/** @file video.h Video specific Header File*/
 
 #ifndef _H_VIDEO
 #define _H_VIDEO
@@ -133,10 +133,6 @@ https://opensource.org/licenses/MIT.
 #define WHITE 0xff
 
 
-typedef struct{
-    unsigned char x, y, color;
-} pixel_pair;
-
 
 /**
  * Set the Video Mode
@@ -148,6 +144,8 @@ typedef struct{
  * Also, you can use a mask to ensure the Screen Memory Block Used
  * 
  * example: <pre>RGB | SCREEN_1</pre> -> RGB Mode at Screen Memory Block 1.
+ * 
+ * <strong>NOTE:</strong> By default RGB Mode and Screen 3 are used.
  */
 extern void __fastcall__ setVideoMode(char mode);
 

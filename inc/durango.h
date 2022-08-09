@@ -12,13 +12,46 @@ https://opensource.org/licenses/MIT.
 
 #include "video.h"
 
+
+/**
+ * BUTTON A 
+ */
 #define BUTTON_A 0x80
+
+/**
+ * BUTTON START 
+ */
 #define BUTTON_START 0x40
+
+
+/**
+ * BUTTON B
+ */
 #define BUTTON_B 0x20
+
+/**
+ * BUTTON SELECT
+ */
 #define BUTTON_SELECT 0x10
+
+/**
+ * BUTTON UP 
+ */
 #define BUTTON_UP 0x08
+
+/**
+ * BUTTON LEFT 
+ */
 #define BUTTON_LEFT 0x04
+
+/**
+ * BUTTON DOWN
+ */
 #define BUTTON_DOWN 0x02
+
+/**
+ * BUTTON RIGTH
+ */
 #define BUTTON_RIGHT 0x01
 
 /**
@@ -82,11 +115,20 @@ extern void __fastcall__ consoleLogStr(char *str);
 extern void __cdecl__ drawRect(unsigned char x, unsigned char y, unsigned char width, unsigned char height, unsigned char color);
 
 /**
- * Read first gamepad.
+ * Read first gamepad. Get the current value of al the buttons pressed as a unsigned Chart.
+ * 
+ * You can use a mask to ensure what button was pressed. Example: <pre>value & BUTTON_A</pre> Checks if the button A is pressed.
+ * 
+ * @return Current value of the gamepad 1.
  */
 extern unsigned char __fastcall__ readGamepad1(void);
+
 /**
- * Read second gamepad.
+ * Read second gamepad. Get the current value of al the buttons pressed as a unsigned Chart.
+ * 
+ * You can use a mask to ensure what button was pressed. Example: <pre>value & BUTTON_A</pre> Checks if the button A is pressed.
+ * 
+ * @return Current value of the gamepad 2.
  */
 extern unsigned char __fastcall__ readGamepad2(void);
 
