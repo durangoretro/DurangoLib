@@ -47,5 +47,34 @@ make && make makeziplib
 ```bash
 docker run --rm -v $PWD:/src/durango zerasul/durangodevkit:latest make && make makeziplib
 ```
+## Running Examples
+
+In the folder ```examples```, you can find several examples of the uses of Durango Framework; and can generate a Rom from Each example. Each Example have his own Makefile, and the source Code.
+
+To compile each Example, you need first to Compile the Durango Framework.
 
 
+```bash
+git clone https://github.com/durangoretro/DurangoLib.git
+make
+```
+
+If you are using the [Durango Docker Image](https://hub.docker.com/r/zerasul/durangodevkit):
+
+
+```bash
+git clone https://github.com/durangoretro/DurangoLib.git
+docker run --rm -v $PWD:/src/durango zerasul/durangodevkit:latest
+```
+
+Once you compile the last version of Durango FrameWork, you can compile each example:
+
+```bash
+make -C examples/fill_screen
+```
+
+Or using Docker:
+
+```bash
+docker run --rm -v $PWD:/src/durango zerasul/durangodevkit:latest make -C examples/fill_scren
+```

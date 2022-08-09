@@ -4,6 +4,7 @@ INCLUDE_DIRS=inc
 CFG_DIR=cfg
 ASM_DIR=asm
 DOCS_DIR=docs
+SAMPLES_DIR=examples
 
 COMPILE_OPTS = -c -I $(INCLUDE_DIRS) -Oir
 
@@ -39,7 +40,7 @@ $(BUILD_DIR)/:
 	mkdir -p $(BUILD_DIR)
 
 makeziplib: $(BUILD_DIR)/durango.lib
-	zip durangoLib.zip $(DOCS_DIR) $(BUILD_DIR)/durango.lib $(BUILD_DIR)/sbc.lib $(INCLUDE_DIRS)/durango.h $(CFG_DIR)/durango.cfg $(CFG_DIR)/durango16k.cfg $(BUILD_DIR)/vectors.o $(INCLUDE_DIRS)/video.h
+	zip durangoLib.zip LICENSE $(DOCS_DIR) $(SAMPLES_DIR) $(BUILD_DIR)/durango.lib $(BUILD_DIR)/sbc.lib $(INCLUDE_DIRS)/durango.h $(CFG_DIR)/durango.cfg $(CFG_DIR)/durango16k.cfg $(BUILD_DIR)/vectors.o $(INCLUDE_DIRS)/video.h
 
 clean:
 	rm -Rf bin/ durangoLib.zip
