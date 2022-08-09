@@ -356,7 +356,7 @@ loop:
     ; Convert to mem pointer
     JSR _convert_coords_to_mem
     
-    row_loop:
+    ; Draw row    
     LDA _screen_pointer
     PHA
     LDA _screen_pointer+1
@@ -365,6 +365,7 @@ loop:
     PHA
     LDA _temp2
     PHA
+    row_loop:
     JSR _drawCurrentPosition
     DEC _temp2
     BNE row_loop
@@ -376,10 +377,9 @@ loop:
     STA _screen_pointer+1
     PLA
     STA _screen_pointer
-    JSR _nextRow
     
-	DEC _temp1
-	JSR _nextRow
+    JSR _nextRow
+    DEC _temp1	
 	BNE row_loop
 	
     ; Remove args from stack
