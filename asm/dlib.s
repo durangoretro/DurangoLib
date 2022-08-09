@@ -352,15 +352,32 @@ loop:
     LDY #$02
     LDA (sp), Y
     STA _temp2
-	PHA
+	    
     ; Convert to mem pointer
     JSR _convert_coords_to_mem
+    
     row_loop:
+    LDA _screen_pointer
+    PHA
+    LDA _screen_pointer+1
+    PHA
+    LDA _screen_pointer+2
+    PHA
+    LDA _temp2
+    PHA
     JSR _drawCurrentPosition
     DEC _temp2
     BNE row_loop
     PLA
     STA _temp2
+    PLA
+    STA _screen_pointer+2
+    PLA
+    STA _screen_pointer+1
+    PLA
+    STA _screen_pointer
+    JSR _nextRow
+    
 	DEC _temp1
 	JSR _nextRow
 	BNE row_loop
