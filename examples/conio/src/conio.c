@@ -15,7 +15,7 @@ int main(){
 	unsigned char i;
 	
 	while (text[i]) {
-		_conio(text[i]);
+		conio(text[i]);
 		i++;
 	}
     
