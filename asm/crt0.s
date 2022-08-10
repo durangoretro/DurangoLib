@@ -51,6 +51,7 @@ _init:
           LDA #$3c
           STA $df80
           JSR _disableDoubleBuffer
+          ; Send 12 to conio
 ; ---------------------------------------------------------------------------
 ; Call main()
 
