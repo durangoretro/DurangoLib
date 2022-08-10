@@ -17,6 +17,7 @@
 .export _disableDoubleBuffer
 .export _enableDoubleBuffer
 .export _swapBuffers
+.export _conio
 
 .bss
 _draw_buffer: .byt $00
