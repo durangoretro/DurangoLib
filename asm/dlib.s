@@ -166,30 +166,28 @@ _data_pointer: .res 2, $00 ;  Reserve a local zero page pointer for data positio
 .endproc
 
 .proc _fillScreen: near
+	PHA
 	; Init video pointer
     LDX _draw_buffer
-    STX _screen_pointer+1
-    LDX #$00
-    STX _screen_pointer
-	TAX
-	; Calculate end memory position into temp1
-	LDA _screen_pointer+1
-	CLC
-	ADC #$20
-	STA _temp1
-loop2:
-	TXA
-	; Iterate over less significative memory address
     LDY #$00
+    STY _screen_pointer
+    TXA
+    CLC
+    ADC #$20	; compute end address
+    STA _temp1
+    PLA
+	; Calculate end memory position into temp1
+loop2:
+    STX _screen_pointer+1
+	; Iterate over less significative memory address
 loop:
     STA (_screen_pointer), Y
     INY
     BNE loop
 
     ; Iterate over more significative memory address
-    INC _screen_pointer+1 ; Increment memory pointer Hi address
-    LDA _temp1 ; Compare with end memory position
-    CMP _screen_pointer+1
+    INX ; Increment memory pointer Hi address
+    CPX _temp1
     BNE loop2
     RTS
 .endproc
