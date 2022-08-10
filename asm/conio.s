@@ -1,15 +1,15 @@
-; firmware module for minimOS
-; Durango-X firmware console 0.9.6b4
-; 16x16 text 16 colour _or_ 32x32 text b&w
+; CONIO module for DurangoLib, CMOS 65C02 version
+; based on Durango-X firmware console 0.9.6b4
+; 16-colour 16x16 text  _or_ b&w 32x32 text
 ; (c) 2021-2022 Carlos J. Santisteban
-; last modified 20220110-2240
+; last modified 20220811-0004
 
 ; ****************************************
 ; CONIO, simple console driver in firmware
 ; ****************************************
 ; template with temporary IO9 input support (no handshake!)
 ;	INPUT
-; Y <-	char to be printed (1...255)
+; Y <-	char to be printed (1...255) => goes thru A in CC65
 ;	supported control codes in this version
 ;		0	= ask for one character (non-locking)
 ;		1	= start of line (CR withput LF, eg. set Y to one so DEY sets Z and skips LF routine)
@@ -46,60 +46,71 @@
 ;		28...30	= Tektronix graphic commands
 ;	OUTPUT
 ; C ->	no available char (if Y was 0)
-; Y -> input char (if Y was 0)
+; Y -> input char (if Y was 0) => goes thru A in CC65
 
-; *** zeropage variables *** standard OS
+; *** zeropage variables *** reusing some DurangoLib
 ; cio_src.w (pointer to glyph definitions)
 ; cio_pt.w (screen pointer)
 
 ; *** other variables, perhaps in ZP ***
-; fw_cbyt (temporary glyph storage)
-; fw_ccnt (another temporary storage) *** NO LONGER USED
-; fw_chalf (remaining pages to write)
+; _conio_cbyt (temporary glyph storage)
+; _conio_ccnt (another temporary storage) *** NO LONGER USED
+; _conio_chalf (remaining pages to write)
 
 ; *** firmware variables to be reset upon FF ***
-; fw_ccol.p (array 00.01.10.11 of two-pixel combos, will store ink & paper)
+; _conio_ccol.p (array 00.01.10.11 of two-pixel combos, will store ink & paper)
 ; * NEW* FF will reconstruct it from [1] (PAPER-INK)
-; fw_ciop.w (upper scan of cursor position)
-; fw_fnt.w (new, pointer to relocatable 2KB font file)
-; fw_mask (for inverse/emphasis mode)
-; fw_cbin (binary or multibyte mode)
-; fw_vbot (new, first VRAM page, allows screen switching upon FF)
-; fw_vtop (new, first non-VRAM page, allows screen switching upon FF)
+; _conio_ciop.w (upper scan of cursor position)
+; _conio_fnt.w (new, pointer to relocatable 2KB font file)
+; _conio_mask (for inverse/emphasis mode)
+; _conio_cbin (binary or multibyte mode) *** MUST BE DONE BEFORE FIRST USE
+; _conio_vbot (new, first VRAM page, allows screen switching upon FF)
+; _conio_vtop (new, first non-VRAM page, allows screen switching upon FF)
 
-; first two modes are directly processed, note BM_DLE is the shifted X
-#define	BM_CMD		0
-#define	BM_DLE		32
-; these modes are handled by indexed jump, note offset of 2
-#define	BM_INK		2
-#define	BM_PPR		4
-#define	BM_ATY		6
-#define	BM_ATX		8
-
-; initial colours already defined in init file
 .(
-#ifdef	TESTING
--IO8attr= $DF80				; compatible IO8lh for setting attributes (d7=HIRES, d6=INVERSE, now d5-d4 include screen block)
--IO8blk	= $DF88				; video blanking signals
--IO9di	= $DF9A				; data input (TBD)
--IOBeep	= $DFBF				; canonical buzzer address (d0)
-#endif
+; *******************
+; *** definitions ***
+; *******************
+; *** Durango addresses ***
+IO8attr	= $DF80				; compatible IO8lh for setting attributes (d7=HIRES, d6=INVERSE, now d5-d4 include screen block)
+IO8blk	= $DF88				; video blanking signals
+IO9di	= $DF9A				; data input (TBD)
+IOBeep	= $DFBF				; canonical buzzer address (d0)
 
-	TYA						; is going to be needed here anyway
-	LDX fw_cbin				; check whether in binary/multibyte mode
+; *** code constants ***
+; first two modes are directly processed, note BM_DLE is the shifted X
+BM_CMD	= 0
+BM_DLE	= 32
+; these modes are handled by indexed jump, note offset of 2
+BM_INK	= 2
+BM_PPR	= 4
+BM_ATY	= 6
+BM_ATX	= 8
+
+; *** ZP from lib ***
+cio_src	= _data_pointer		; (pointer to glyph definitions)
+cio_pt	= _screen_pointer	; (screen pointer)
+
+; *** non-ZP memory usage, new on lib ***
+
+; ******************
+; *** CONIO code ***
+; ******************
+;	TYA						; is going to be needed here anyway
+	LDX _conio_cbin			; check whether in binary/multibyte mode
 	BEQ cio_cmd				; if not, check whether command (including INPUT) or glyph
 		CPX #BM_DLE			; just receiving what has to be printed?
 			BEQ cio_gl		; print the glyph!
-		_JMPX(cio_mbm-2)	; otherwise process following byte as expected, note offset
+		JMP (cio_mbm-2, X)	; otherwise process following byte as expected, note offset *CMOS
 cio_cmd:
 	CMP #32					; printable anyway?
 	BCS cio_prn				; go for it, flag known to be clear
 		ASL					; if arrived here, it MUST be below 32! two times
 		TAX					; use as index
 		CLC					; will simplify most returns as DR_OK becomes just RTS
-		_JMPX(cio_ctl)		; execute from table
+		JMP (cio_ctl, X)	; execute from table *CMOS
 cio_gl:
-	_STZX fw_cbin			; clear flag!
+	STZ _conio_cbin			; clear flag! *CMOS
 cio_prn:
 ; ***********************************
 ; *** output character (now in A) ***
@@ -111,14 +122,14 @@ cio_prn:
 	ASL
 	ROL cio_src+1			; M=?????765, A=43210···
 	CLC
-	ADC fw_fnt				; add font base
+	ADC _conio_fnt			; add font base
 	STA cio_src
 	LDA cio_src+1			; A=?????765
 	AND #7					; A=·····765
-	ADC fw_fnt+1			; in case no glyphs for control codes, this must hold actual MSB-1
+	ADC _conio_fnt+1		; in case no glyphs for control codes, this must hold actual MSB-1
 	STA cio_src+1			; pointer to glyph is ready
-	LDY fw_ciop				; get current address
-	LDA fw_ciop+1
+	LDY _conio_ciop			; get current address
+	LDA _conio_ciop+1
 	STY cio_pt				; set pointer
 	STA cio_pt+1
 	LDY #0					; reset screen offset (common)
@@ -127,8 +138,8 @@ cio_prn:
 	BPL cpc_col				; skip to colour mode, hires is smaller
 ; hires version (17b for CMOS, usually 231t, plus jump to cursor-right)
 cph_loop:
-			_LDAX(cio_src)	; glyph pattern (5)
-			EOR fw_mask		; eeeeeeeeeek (4)
+			LDA (cio_src)	; glyph pattern (5) *CMOS
+			EOR _conio_mask	; eeeeeeeeeek (4)
 			STA (cio_pt), Y	; put it on screen (5)
 			INC cio_src		; advance to next glyph byte (5)
 			BNE cph_nw		; (usually 3, rarely 7)
@@ -144,23 +155,23 @@ cph_nw:
 ; new FAST version, but no longer with sparse array
 cpc_col:
 	LDX #2
-	STX fw_chalf			; two pages must be written (2+4*)
+	STX _conio_chalf		; two pages must be written (2+4*)
 cpc_do:						; outside loop (done 8 times) is 8x(45+inner)+113=969, 8x(42+inner)+111=919 in ZP  (was ~1497/1407)
-		_LDAX(cio_src)		; glyph pattern (5)
-		EOR fw_mask			; in case inverse mode is set, much better here (4)
+		LDA (cio_src)		; glyph pattern (5) *CMOS
+		EOR _conio_mask		; in case inverse mode is set, much better here (4)
 ; *** *** glyph pattern is loaded and masked, let's try an even faster alternative, store all 4 positions premasked as sparse indexes
 		TAX					; keep safe (2)
 		AND #%00000011		; rightmost pixels (2)
-		STA fw_sind			; fourth and last sparse index (4*, note inverted order)
+		STA _conio_sind		; fourth and last sparse index (4*, note inverted order)
 		TXA					; quickly get the rest (2)
 		AND #%00001100		; pixels 4-5 (2)
 		LSR: LSR			; no longer sparse (2+2)
-		STA fw_sind+1		; third sparse index (4*)
+		STA _conio_sind+1	; third sparse index (4*)
 		TXA
 		AND #%00110000		; pixels 2-3 (2+2)
 		LSR: LSR
 		LSR: LSR			; no longer sparse, C is clear (2+2+2+2)
-		STA fw_sind+2		; second sparse index (4*)
+		STA _conio_sind+2	; second sparse index (4*)
 		TXA
 		AND #%11000000		; two leftmost pixels (will be processed first) (2+2)
 		ROL: ROL: ROL		; no longer sparse, faster this way and ready to use as index (2+2+2)
@@ -169,20 +180,20 @@ cpc_do:						; outside loop (done 8 times) is 8x(45+inner)+113=969, 8x(42+inner)
 			INC cio_src+1
 cpc_loop:					; (all loop was 122/115t, now unrolled is 62/59t)
 			TAX				; A was sparse index (2)
-			LDA fw_ccol, X	; get proper colour pair (4)
+			LDA _conio_ccol, X	; get proper colour pair (4)
 			STA (cio_pt), Y	; put it on screen (6 eeek)
 			INY				; next screen byte for this glyph byte (2)
 ; here comes the time critical part, let's try to unroll
-			LDX fw_sind+2	; get next sparse index (4*)
-			LDA fw_ccol, X	; get proper colour pair (4)
+			LDX _conio_sind+2	; get next sparse index (4*)
+			LDA _conio_ccol, X	; get proper colour pair (4)
 			STA (cio_pt), Y	; put it on screen (6 eeek)
 			INY				; next screen byte for this glyph byte (2)
-			LDX fw_sind+1	; get next sparse index (4*)
-			LDA fw_ccol, X	; get proper colour pair (4)
+			LDX _conio_sind+1	; get next sparse index (4*)
+			LDA _conio_ccol, X	; get proper colour pair (4)
 			STA (cio_pt), Y	; put it on screen (6 eeek)
 			INY				; next screen byte for this glyph byte (2)
-			LDX fw_sind		; get next sparse index (4*)
-			LDA fw_ccol, X	; get proper colour pair (4)
+			LDX _conio_sind		; get next sparse index (4*)
+			LDA _conio_ccol, X	; get proper colour pair (4)
 			STA (cio_pt), Y	; put it on screen (6 eeek)
 			INY				; next screen byte for this glyph byte (2)
 ; ...etc
@@ -193,7 +204,7 @@ cpc_rend:					; end segment has not changed, takes 6x11 + 2x24 - 1, 113t (66+46-
 		TAY					; offset ready (2)
 		BNE cpc_do			; unfortunately will wrap twice! (mostly 3)
 			INC cio_pt+1	; next page for the last 4 raster (5)
-			DEC fw_chalf	; only one half done? go for next and last (*6+3)
+			DEC _conio_chalf	; only one half done? go for next and last (*6+3)
 		BNE cpc_do
 ; advance screen pointer before exit, no need for jump if cursor-right is just here!
 
@@ -207,10 +218,10 @@ cur_r:
 		LDA #4				; ...or use value for colour mode
 rcu_hr:
 	CLC
-	ADC fw_ciop				; advance pointer
-	STA fw_ciop				; EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEK
+	ADC _conio_ciop			; advance pointer
+	STA _conio_ciop			; EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEK
 	BCC rcu_nw				; check possible carry
-		INC fw_ciop+1
+		INC _conio_ciop+1
 rcu_nw:						; will return, no need for jump if routine is placed below
 
 ; ************************
@@ -223,17 +234,17 @@ ck_wrap:
 	LDY #%11100000			; hires mask
 	BIT IO8attr				; check mode
 	BMI wr_hr				; OK if we're in hires
-#ifdef	SAFE
-		LDA fw_ciop+1		; check MSB
+; * SAFE option *
+		LDA _conio_ciop+1	; check MSB
 		LSR					; just check d0, should clear C
 			BCS cn_begin	; strange scanline, thus time for the NEWLINE (Y>1)
-#endif
+; * *
 		LDY #%11000000		; in any case, get proper mask for colour mode
 wr_hr:
 	TYA						; prepare mask and guarantee Y>1 for auto LF
-	AND fw_ciop				; are scanline bits clear?
+	AND _conio_ciop			; are scanline bits clear?
 		BNE cn_begin		; nope, do NEWLINE
-	_DR_OK					; continue normally otherwise (better clear C)
+	CLC:RTS					; continue normally otherwise (better clear C)
 
 ; ************************
 ; *** control routines ***
@@ -255,12 +266,12 @@ cur_l:
 cl_hr:
 	STA cio_src				; EEEEEEEEEEEK
 	SEC
-	LDA fw_ciop
+	LDA _conio_ciop
 	SBC cio_src				; subtract to pointer, but...
 	BMI cl_end				; ...ignore operation if went negative
-		STA fw_ciop			; update pointer
+		STA _conio_ciop		; update pointer
 cl_end:
-	_DR_OK					; C known to be set, though
+	CLC:RTS					; C known to be set, though
 
 cn_newl:
 ; CR, but will do LF afterwards by setting Y appropriately
@@ -269,22 +280,20 @@ cn_begin:
 ; do CR... but keep Y
 ; note address format is 011yyyys-ssxxxxpp (colour), 011yyyyy-sssxxxxx (hires)
 ; actually is a good idea to clear scanline bits, just in case
-	_STZA fw_ciop			; all must clear! helps in case of tab wrapping too (eeeeeeeeek...)
+	STZ _conio_ciop			; all must clear! helps in case of tab wrapping too (eeeeeeeeek...) *CMOS
 ; in colour mode, the highest scanline bit is in MSB, usually (TABs, wrap) not worth clearing
 ; ...but might help with unexpected mode change
-#ifdef	SAFE
+; * SAFE option
 	BIT IO8attr			; was it in hires mode?
 	BMI cn_lmok
-#ifdef	NMOS
-		LDA fw_ciop+1		; clear MSB lowest bit (8b/10t)
-		AND #254
-		STA fw_ciop+1
-#else
+; NMOS version
+;		LDA _conio_ciop+1	; clear MSB lowest bit (8b/10t)
+;		AND #254
+;		STA _conio_ciop+1
 		LDA #1				; bit to be cleared (5b/7t)
-		TRB fw_ciop+1		; nice...
-#endif
+		TRB _conio_ciop+1		; nice...
 cn_lmok:
-#endif
+; * *
 ; check whether LF is to be done
 	DEY						; LF needed?
 	BEQ cn_ok				; not if Y was 1 (use BMI if Y was zeroed for LF)
@@ -293,25 +302,25 @@ cn_lf:
 ; do LF, adds 1 (hires) or 2 (colour) to MSB
 ; even simpler, INCrement MSB once... or two if in colour mode
 ; hopefully highest scan bit is intact!!!
-	INC fw_ciop+1			; increment MSB accordingly, this is OK for hires
-	BIT IO8attr			; was it in hires mode?
+	INC _conio_ciop+1		; increment MSB accordingly, this is OK for hires
+	BIT IO8attr				; was it in hires mode?
 	BMI cn_hmok
-		INC fw_ciop+1		; once again if in colour mode... 
+		INC _conio_ciop+1	; once again if in colour mode... 
 cn_hmok:
 ; must check for possible scrolling!!! simply check sign ;-) ...or compare against dynamic limit
-	LDA fw_ciop+1			; EEEEEK
-	CMP fw_vtop
+	LDA _conio_ciop+1		; EEEEEK
+	CMP _conio_vtop
 	BNE cn_ok				; below limit means no scroll
 ; ** scroll routine **
 ; rows are 256 bytes apart in hires mode, but 512 in colour mode
 	LDY #<pvdu				; LSB *must* be zero, anyway
 ; MSB is actually OK for destination, but take from current value
-	LDX fw_vbot
+	LDX _conio_vbot
 	STY cio_pt				; set both LSBs
 	STY cio_src
 	STX cio_pt+1			; destination is set
 	INX						; note trick for NMOS-savvyness
-	BIT IO8attr			; check mode anyway
+	BIT IO8attr				; check mode anyway
 	BMI sc_hr				; +256 is OK for hires
 		INX					; make it +512 for colour
 sc_hr:
@@ -325,7 +334,7 @@ sc_loop:
 	INC cio_pt+1			; both MSBs are incremented at once...
 	INX
 	STX cio_src+1			; ...but only source will enter high-32K at the end
-	CPX fw_vtop				; ...or whatever the current limit is
+	CPX _conio_vtop			; ...or whatever the current limit is
 		BNE sc_loop
 
 ; data has been transferred, now should clear the last line
@@ -333,29 +342,29 @@ sc_loop:
 ; important, cursor pointer must get back one row up! that means subtracting one (or two) from MSB
 	LDA IO8attr				; eeeeeek
 	ASL						; now C is set for hires
-	LDA fw_ciop+1			; cursor MSB
+	LDA _conio_ciop+1		; cursor MSB
 	SBC #1					; with C set (hires) this subtracts 1, but 2 if C is clear! (colour)
-	STA fw_ciop+1
+	STA _conio_ciop+1
 cn_ok:
-	_DR_OK					; note that some code might set C
+	CLC:RTS					; note that some code might set C
 
 cn_tab:
 ; advance column to the next 8x position (all modes)
 ; this means adding 8 to LSB in hires mode, or 32 in colour mode
 ; remember format is 011yyyys-ssxxxxpp (colour), 011yyyyy-sssxxxxx (hires)
 	LDA #%11111000			; hires mask first
-	STA fw_ctmp				; store temporarily
+	STA _conio_ctmp				; store temporarily
 	LDA #8					; lesser value in hires mode
 	BIT IO8attr				; check mode
 	BMI hr_tab				; if in hires, A is already correct
-		ASL fw_ctmp
-		ASL fw_ctmp			; shift mask too, will set C
+		ASL _conio_ctmp
+		ASL _conio_ctmp		; shift mask too, will set C
 		ASL
 		ASL					; but this will clear C in any case
 hr_tab:
-	ADC fw_ciop				; this is LSB, contains old X...
-	AND fw_ctmp				; ...but round down position from the mask!
-	STA fw_ciop
+	ADC _conio_ciop			; this is LSB, contains old X...
+	AND _conio_ctmp			; ...but round down position from the mask!
+	STA _conio_ciop
 ; not so fast, must check for possible line wrap... and even scrolling!
 	JMP ck_wrap				; will return in any case
 
@@ -363,7 +372,7 @@ cio_bel:
 ; BEL, make a beep!
 ; 40ms @ 1 kHz is 40 cycles
 ; the 500µs halfperiod is about 325t
-	_CRITIC					; let's make things the right way
+	PHP:SEI					; let's make things the right way
 	LDX #79					; 80 half-cycles, will end with d0 clear
 cbp_pul:
 		STX IOBeep			; pulse output bit (4)
@@ -373,25 +382,25 @@ cbp_del:
 			BNE cbp_del		; each iteration is (2+3)
 		DEX					; go for next semicycle
 		BPL cbp_pul			; must do zero too, to clear output bit
-	_NO_CRIT				; eeeeek
+	PLP				; eeeeek
 	RTS
 
 cio_bs:
 ; BACKSPACE, go back one char and clear cursor position
 	JSR cur_l				; back one char, if possible, then clear cursor position
-	LDY fw_ciop
-	LDA fw_ciop+1			; get current cursor position...
+	LDY _conio_ciop
+	LDA _conio_ciop+1		; get current cursor position...
 	STY cio_pt
 	STA cio_pt+1			; ...into zp pointer
 	LDX #8					; number of scanlines...
-	STX fw_ctmp				; ...as temporary variable (seldom used)
+	STX _conio_ctmp			; ...as temporary variable (seldom used)
 ; load appropriate A value (clear for hires, paper index repeated for colour)
 	LDX #0					; last index offset should be 0 for hires!
 	TXA						; hires takes no account of paper colour
 	LDY #31					; this is what must be added to Y each scanline, in hires
-	BIT IO8attr			; check mode
+	BIT IO8attr				; check mode
 	BMI bs_hr
-		LDA fw_ccol			; this is two pixels of paper colour
+		LDA _conio_ccol		; this is two pixels of paper colour
 		LDX #3				; last index offset per scan (colour)
 		LDY #60				; this is what must be added to Y each scanline, in colour
 bs_hr:
@@ -413,9 +422,9 @@ bs_scan:
 			INC cio_pt+1	; colour mode will cross page
 bs_scw:
 		PLA					; retrieved value, is there a better way?
-		DEC fw_ctmp			; one scanline less to go
+		DEC _conio_ctmp		; one scanline less to go
 		BNE bs_scan
-	_DR_OK					; should be done
+	CLC:RTS					; should be done
 
 cio_up:
 ; cursor up, no big deal, will stop at top row (NMOS savvy, always 23b and 39t)
@@ -425,32 +434,32 @@ cio_up:
 	LDA #%00001111			; incomplete mask, just for the offset, independent of screen-block
 	ROL						; but now is perfect! C is clear
 	PLP						; hires mode will set C again but do it always! eeeeeeeeeeek
-	AND fw_ciop+1			; current row is now 000rrrrR, R for hires only
+	AND _conio_ciop+1		; current row is now 000rrrrR, R for hires only
 	BEQ cu_end				; if at top of screen, ignore cursor
 		SBC #1				; this will subtract 1 if C is set, and 2 if clear! YEAH!!!
 ;		AND #%00011111		; may be safer with alternative screens
-		ORA fw_vbot			; EEEEEEK must complete pointer address (5b, 6t)
-		STA fw_ciop+1
+		ORA _conio_vbot		; EEEEEEK must complete pointer address (5b, 6t)
+		STA _conio_ciop+1
 cu_end:
-	_DR_OK					; ending this with C set is a minor nitpick, must reset anyway
+	CLC:RTS					; ending this with C set is a minor nitpick, must reset anyway
 
 ; FF, clear screen AND intialise values!
 cio_ff:
 ; note that firmware must set IO8attr hardware register appropriately at boot!
 ; we don't want a single CLS to switch modes, although a font reset is acceptable, set it again afterwards if needed
 ; * things to be initialised... *
-; fw_ccol, note it's an array now (restore from PAPER-INK previous setting)
-; fw_fnt (new, pointer to relocatable 2KB font file)
-; fw_mask (for inverse/emphasis mode)
-; fw_cbin (binary or multibyte mode, but must be reset BEFORE first FF)
+; _conio_ccol, note it's an array now (restore from PAPER-INK previous setting)
+; _conio_fnt (new, pointer to relocatable 2KB font file)
+; _conio_mask (for inverse/emphasis mode)
+; _conio_cbin (binary or multibyte mode, but must be reset BEFORE first FF)
 
-;	STZ fw_mask				; true video *** no real need to reset this
-;	STZ fw_cbin				; standard character mode *** not much sense anyway
-	JSR rs_col				; restore array from whatever is at fw_ccol[1] (will restore fw_cbin)
+	STZ _conio_mask			; true video *CMOS
+;	STZ _conio_cbin			; standard character mode *** not much sense anyway
+	JSR rs_col				; restore array from whatever is at _conio_ccol[1] (will restore _conio_cbin)
 	LDY #<cio_fnt			; supplied font address
 	LDA #>cio_fnt
-	STY fw_fnt				; set firmware pointer (will need that again after FF)
-	STA fw_fnt+1
+	STY _conio_fnt			; set firmware pointer (will need that again after FF)
+	STA _conio_fnt+1
 ; standard CLS, reset cursor and clear screen
 	JSR cio_home			; reset cursor and load appropriate address
 ; recompute MSB in A according to hardware
@@ -459,15 +468,15 @@ cio_ff:
 	ASL
 	TAX						; keep bottom of VRAM
 	ADC #$20				; C was clear b/c ASL
-	STA fw_vtop				; eeeeek
+	STA _conio_vtop			; eeeeek
 	TXA
-#ifdef	SAFE
+; * SAFE option *
 	BNE ff_ok
 		LDA #%00010000		; base address for 8K systems is 4K
 ff_ok:
-#endif
-	STA fw_vbot				; store new variable
-	STA fw_ciop+1			; must correct this one too
+; * *
+	STA _conio_vbot			; store new variable
+	STA _conio_ciop+1		; must correct this one too
 	STY cio_pt				; set pointer (LSB=0)...
 	STA cio_pt+1
 ;	LDY #0					; usually not needed as screen is page-aligned! ...and clear whole screen, will return to caller
@@ -479,38 +488,38 @@ cio_clear:
 	TYA						; A should be zero in hires, and Y is known to have that
 	BIT IO8attr
 	BMI sc_clr				; eeeeeeeeek
-		LDA fw_ccol			; EEEEEEEEK, this gets paper colour byte
+		LDA _conio_ccol		; EEEEEEEEK, this gets paper colour byte
 sc_clr:
 		STA (cio_pt), Y		; clear all remaining bytes
 		INY
 		BNE sc_clr
 	INC cio_pt+1			; next page
 	LDX cio_pt+1			; but must check variable limits!
-	CPX fw_vtop
+	CPX _conio_vtop
 		BNE sc_clr
 	RTS
 
 ; SO, set inverse mode
 cn_so:
 	LDA #$FF				; OK for all modes?
-	STA fw_mask				; set value to be EORed
+	STA _conio_mask			; set value to be EORed
 	RTS
 
 ; SI, set normal mode
 cn_si:
-	_STZA fw_mask			; clear value to be EORed
+	STZ _conio_mask			; clear value to be EORed *CMOS
 	RTS
 
 md_dle:
 ; DLE, set binary mode
 ;	LDX #BM_DLE				; X already set if 32
-	STX fw_cbin				; set binary mode and we are done
+	STX _conio_cbin			; set binary mode and we are done
 	RTS
 
 cio_cur:
 ; XON, we have no cursor, but show its position for a moment
-	LDY fw_ciop				; get current position pointer
-	LDX fw_ciop+1
+	LDY _conio_ciop			; get current position pointer
+	LDX _conio_ciop+1
 	STY cio_pt
 	LDY #224				; offset for last scanline at cursor position... in hires
 	BIT IO8attr				; are we in colour mode? that offset won't be valid!
@@ -539,27 +548,27 @@ ignore:
 md_ink:
 ; just set binary mode for receiving ink! *** could use some tricks to unify with paper mode setting
 	LDX #BM_INK				; next byte will set ink
-	STX fw_cbin				; set multibyte mode and we are done
+	STX _conio_cbin			; set multibyte mode and we are done
 	RTS
 
 md_ppr:
 ; just set binary mode for receiving paper! *** check above for simpler alternative
 	LDX #BM_PPR				; next byte will set ink
-	STX fw_cbin				; set multibyte mode and we are done
+	STX _conio_cbin			; set multibyte mode and we are done
 	RTS
 
 cio_home:
 ; just reset cursor pointer, to be done after (or before!) CLS
 	LDY #<pvdu				; base address for all modes, actually 0
-	LDA fw_vbot				; current screen setting!
-	STY fw_ciop				; just set pointer
-	STA fw_ciop+1
+	LDA _conio_vbot			; current screen setting!
+	STY _conio_ciop			; just set pointer
+	STA _conio_ciop+1
 	RTS						; C is clear, right?
 
 md_atyx:
 ; prepare for setting y first
 	LDX #BM_ATY				; next byte will set Y and then expect X for the next one
-	STX fw_cbin				; set new mode, called routine will set back to normal
+	STX _conio_cbin			; set new mode, called routine will set back to normal
 	RTS
 
 ; *******************************
@@ -568,11 +577,11 @@ md_atyx:
 ; set INK, 19b + common 55b, old version was 44b
 cn_ink:
 	AND #15					; 2= ink to be set
-	STA fw_cbyt				; temporary INK storage			(0I)
-	LDA fw_ccol+1			; get combined storage
+	STA _conio_cbyt			; temporary INK storage			(0I)
+	LDA _conio_ccol+1		; get combined storage
 	AND #$F0				; only old PAPER at high nibble	(p0)
-	ORA fw_cbyt				; combine result				(pI)
-	STA fw_ccol+1
+	ORA _conio_cbyt			; combine result				(pI)
+	STA _conio_ccol+1
 	JMP set_col				; and complete array
 
 ; set PAPER, 18b + common 55b, old version was 42b
@@ -582,50 +591,50 @@ cn_ppr:						; 4= paper to be set
 	ASL
 	ASL
 	ASL						; PAPER in high nibble			(P0)
-	STA fw_cbyt				; temporary storage
-	LDA fw_ccol+1			; previous combined storage
+	STA _conio_cbyt			; temporary storage
+	LDA _conio_ccol+1		; previous combined storage
 	AND #$0F				; only old INK at low nibble	(0i)
-	ORA fw_cbyt				; combine result with PAPER...	(Pi)
-	STA fw_ccol+1			; ...and fall to complete the array
+	ORA _conio_cbyt			; combine result with PAPER...	(Pi)
+	STA _conio_ccol+1		; ...and fall to complete the array
 ;	JMP set_col
 ; reconstruct array from PAPER-INK index
-; * surely can be shrinked by use of lost fw_ccnt, but who cares...
+; * surely can be shrinked by use of lost _conio_ccnt, but who cares...
 rs_col:						; restore colour aray from [1] (PAPER-INK)
-	LDA fw_ccol+1			; get all				xx PI xx xx
-+set_col:
+	LDA _conio_ccol+1		; get all				xx PI xx xx
+set_col:
 	AND #$0F				; ink only
-	STA fw_cbyt				; temporary ink storage	(0I)
+	STA _conio_cbyt			; temporary ink storage	(0I)
 	ASL
 	ASL
 	ASL
 	ASL						; ink in high nibble	(I0)
-	ORA fw_cbyt				; all ink...			(II)
-	STA fw_ccol+3			; ... at [3]			xx PI xx II
+	ORA _conio_cbyt			; all ink...			(II)
+	STA _conio_ccol+3		; ... at [3]			xx PI xx II
 	AND #$F0				; high nibble only...	(I0)
-	STA fw_cbyt				; ...temporary
-	LDA fw_ccol+1			; both colours again	(PI)
+	STA _conio_cbyt			; ...temporary
+	LDA _conio_ccol+1		; both colours again	(PI)
 	LSR
 	LSR
 	LSR
 	LSR						; PAPER at low nibble	(0P)
-	ORA fw_cbyt				; this is INK-PAPER...	(IP)
-	STA fw_ccol+2			; ...at [2]				xx PI IP II
+	ORA _conio_cbyt			; this is INK-PAPER...	(IP)
+	STA _conio_ccol+2		; ...at [2]				xx PI IP II
 	AND #$0F				; paper only			(0P)
-	STA fw_cbyt
+	STA _conio_cbyt
 	ASL
 	ASL
 	ASL
 	ASL						; at high nibble		(P0)
-	ORA fw_cbyt				; all paper...			(PP)
-	STA fw_ccol				; ...at [0]				PP PI IP II
+	ORA _conio_cbyt			; all paper...			(PP)
+	STA _conio_ccol			; ...at [0]				PP PI IP II
 md_std:
-	_STZA fw_cbin			; back to standard mode
+	STZ _conio_cbin			; back to standard mode *CMOS
 	RTS
 
 cn_sety:					; 6= Y to be set, advance mode to 8
 	JSR coord_ok			; common coordinate check as is a square screen
-#ifdef	SAFE
-	LDX fw_vbot
+; * SAFE option *
+	LDX _conio_vbot
 	CPX #$10				; is base address $1000? (8K system)
 	BNE y_noth
 		AND #15				; max lines for hires mode in 8K RAM
@@ -633,17 +642,17 @@ cn_sety:					; 6= Y to be set, advance mode to 8
 		BPL y_noth
 			AND #7			; even further filtering in colour!
 y_noth:
-#endif
-	STA fw_ciop+1			; *** note temporary use of MSB as Y coordinate ***
+; * *
+	STA _conio_ciop+1		; *** note temporary use of MSB as Y coordinate ***
 	LDX #BM_ATX
-	STX fw_cbin				; go into X-expecting mode EEEEEEK
+	STX _conio_cbin			; go into X-expecting mode EEEEEEK
 	RTS
 
 coord_ok:
-#ifdef	SAFE
+; * SAFE option *
 	CMP #32					; check for not-yet-supported pixel coordinates
 		BCC not_px			; must be at least 32, remember stack balance!
-#endif
+; * *
 	AND #31					; filter coordinates, note +32 offset is deleted as well
 	BIT IO8attr				; if in colour mode, further filtering
 	BMI do_set
@@ -651,13 +660,13 @@ coord_ok:
 do_set:
 	RTS						; if both coordinates setting is combined, could be inlined
 
-#ifdef	SAFE
+; * SAFE option *
 not_px:
 ; must ignore pixel coordinates, just rounding up to character position
 	PLA
 	PLA						; discard coordinate checking return address!
 	RTS						; that's all, as C known clear
-#endif
+; * *
 
 cn_atyx:					; 8= X to be set and return to normal
 	JSR coord_ok
@@ -665,33 +674,37 @@ cn_atyx:					; 8= X to be set and return to normal
 	BMI do_atx
 		ASL
 		ASL
-		ASL fw_ciop+1		; THIS IS BAD *** KLUDGE but seems to work (had one extra)
+		ASL _conio_ciop+1	; THIS IS BAD *** KLUDGE but seems to work (had one extra)
 do_atx:
-	STA fw_ciop				; THIS IS BAD *** KLUDGE but seems to work
-	LDA fw_ciop+1			; add to recomputed offset the VRAM base address, this was temporarily Y offset
+	STA _conio_ciop			; THIS IS BAD *** KLUDGE but seems to work
+	LDA _conio_ciop+1		; add to recomputed offset the VRAM base address, this was temporarily Y offset
 	CLC						; not necessarily clear in hires?
-	ADC fw_vbot
-	STA fw_ciop+1
-	_BRA md_std
+	ADC _conio_vbot
+	STA _conio_ciop+1
+	BRA md_std				; *CMOS
 
 ; **********************
-; *** keyboard input *** may be moved elsewhere
+; **********************
+; *** keyboard input *** TEMPORARY for PASK interface at $DF9A
+; **********************
 ; **********************
 ; IO9 port is read, normally 0
 ; any non-zero value is stored and returned the first time, otherwise returns empty (C set)
 ; any repeated characters must have a zero inbetween, 10 ms would suffice (perhaps as low as 5 ms)
 cn_in:
-	LDY IO9di				; get current data at port *** must set lower address nibble
+	LDA IO9di				; get current data at port *** must set lower address nibble
 ; *** should this properly address a matrix keyboard?
 	BEQ cn_empty			; no transfer is in the making
-		CPY fw_io9			; otherwise compare with last received
+		CMP _conio_io9		; otherwise compare with last received
 	BEQ cn_ack				; same as last, keep trying
-		STY fw_io9			; this is received and different
-		_DR_OK				; send received
+		STA _conio_io9		; this is received and different
+		CLC:RTS				; send received
 cn_empty:
-	STY fw_io9				; keep clear
+	STA _conio_io9			; keep clear
 cn_ack:
-	_DR_ERR(EMPTY)			; set C instead eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeek
+	SEC:RTS					; *** must indicate error somehow ***
+
+; **************************************************
 
 ; **************************************************
 ; *** table of pointers to control char routines ***
@@ -737,6 +750,6 @@ cio_mbm:
 	.word	cn_sety			; 6= Y to be set, advance mode to 8
 	.word	cn_atyx			; 8= X to be set and return to normal
 
-+cio_fnt:					; *** export label for init! ***
-#include "../drivers/fonts/8x8.s"
+cio_fnt:
+.include "../drivers/fonts/8x8.s"
 .)

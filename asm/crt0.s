@@ -51,7 +51,11 @@ _init:
           LDA #$3c
           STA $df80
           JSR _disableDoubleBuffer
-          ; Send 12 to conio
+          LDA #$0F						; standard colours, white ink on black background
+          STA _conio_ccol+1				; array will be restored by FF
+          STZ _conio_cbin				; IMPORTANT
+          LDA #$0C						; FORM FEED will clear the screen and intialise CONIO
+          JSR _conio
 ; ---------------------------------------------------------------------------
 ; Call main()
 
