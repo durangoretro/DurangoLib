@@ -532,5 +532,5 @@ loop:
 .endproc
 
 .proc _conio: near
-	NOP		; placeholder for CONIO function
+.include "conio.s"
 .endproc
