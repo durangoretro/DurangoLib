@@ -531,3 +531,7 @@ loop:
 	STA $df80
     RTS
 .endproc
+
+.proc _conio: near
+	NOP		; placeholder for CONIO function
+.endproc

@@ -146,4 +146,10 @@ extern void __fastcall__ enableDoubleBuffer(void);
  */
 extern void __fastcall__ swapBuffers(void);
 
+/**
+ * Print one character/read from console device
+ */
+extern unsigned char __fastcall__ conio(unsigned char y);
+
 #endif
+
