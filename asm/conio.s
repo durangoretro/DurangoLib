@@ -67,6 +67,10 @@
 ; _conio_vbot (new, first VRAM page, allows screen switching upon FF)
 ; _conio_vtop (new, first non-VRAM page, allows screen switching upon FF)
 
+.import cio_fnt
+
+.CODE
+
 .proc _conio: near
 ; *******************
 ; *** definitions ***
@@ -166,16 +170,21 @@ cpc_do:						; outside loop (done 8 times) is 8x(45+inner)+113=969, 8x(42+inner)
 		STA _conio_sind		; fourth and last sparse index (4*, note inverted order)
 		TXA					; quickly get the rest (2)
 		AND #%00001100		; pixels 4-5 (2)
-		LSR: LSR			; no longer sparse (2+2)
+		LSR
+		LSR			; no longer sparse (2+2)
 		STA _conio_sind+1	; third sparse index (4*)
 		TXA
 		AND #%00110000		; pixels 2-3 (2+2)
-		LSR: LSR
-		LSR: LSR			; no longer sparse, C is clear (2+2+2+2)
+		LSR
+		LSR
+		LSR
+		LSR			; no longer sparse, C is clear (2+2+2+2)
 		STA _conio_sind+2	; second sparse index (4*)
 		TXA
 		AND #%11000000		; two leftmost pixels (will be processed first) (2+2)
-		ROL: ROL: ROL		; no longer sparse, faster this way and ready to use as index (2+2+2)
+		ROL
+		ROL
+		ROL		; no longer sparse, faster this way and ready to use as index (2+2+2)
 		INC cio_src			; advance to next glyph byte (5+usually 3)
 		BNE cpc_loop
 			INC cio_src+1
@@ -245,7 +254,8 @@ wr_hr:
 	TYA						; prepare mask and guarantee Y>1 for auto LF
 	AND _conio_ciop			; are scanline bits clear?
 		BNE cn_begin		; nope, do NEWLINE
-	CLC:RTS					; continue normally otherwise (better clear C)
+	CLC
+	RTS					; continue normally otherwise (better clear C)
 
 ; ************************
 ; *** control routines ***
@@ -272,7 +282,8 @@ cl_hr:
 	BMI cl_end				; ...ignore operation if went negative
 		STA _conio_ciop		; update pointer
 cl_end:
-	CLC:RTS					; C known to be set, though
+	CLC
+	RTS					; C known to be set, though
 
 cn_newl:
 ; CR, but will do LF afterwards by setting Y appropriately
@@ -347,7 +358,8 @@ sc_loop:
 	SBC #1					; with C set (hires) this subtracts 1, but 2 if C is clear! (colour)
 	STA _conio_ciop+1
 cn_ok:
-	CLC:RTS					; note that some code might set C
+	CLC
+	RTS					; note that some code might set C
 
 cn_tab:
 ; advance column to the next 8x position (all modes)
@@ -373,7 +385,8 @@ cio_bel:
 ; BEL, make a beep!
 ; 40ms @ 1 kHz is 40 cycles
 ; the 500µs halfperiod is about 325t
-	PHP:SEI					; let's make things the right way
+	PHP
+	SEI					; let's make things the right way
 	LDX #79					; 80 half-cycles, will end with d0 clear
 cbp_pul:
 		STX IOBeep			; pulse output bit (4)
@@ -425,7 +438,8 @@ bs_scw:
 		PLA					; retrieved value, is there a better way?
 		DEC _conio_ctmp		; one scanline less to go
 		BNE bs_scan
-	CLC:RTS					; should be done
+	CLC
+	RTS					; should be done
 
 cio_up:
 ; cursor up, no big deal, will stop at top row (NMOS savvy, always 23b and 39t)
@@ -442,7 +456,8 @@ cio_up:
 		ORA _conio_vbot		; EEEEEEK must complete pointer address (5b, 6t)
 		STA _conio_ciop+1
 cu_end:
-	CLC:RTS					; ending this with C set is a minor nitpick, must reset anyway
+	CLC
+	RTS					; ending this with C set is a minor nitpick, must reset anyway
 
 ; FF, clear screen AND intialise values!
 cio_ff:
@@ -699,11 +714,13 @@ cn_in:
 		CMP _conio_io9		; otherwise compare with last received
 	BEQ cn_ack				; same as last, keep trying
 		STA _conio_io9		; this is received and different
-		CLC:RTS				; send received
+		CLC
+		RTS				; send received
 cn_empty:
 	STA _conio_io9			; keep clear
 cn_ack:
-	SEC:RTS					; *** must indicate error somehow ***
+	SEC
+	RTS					; *** must indicate error somehow ***
 
 ; **************************************************
 
@@ -751,6 +768,4 @@ cio_mbm:
 	.word	cn_sety			; 6= Y to be set, advance mode to 8
 	.word	cn_atyx			; 8= X to be set and return to normal
 
-cio_fnt:
-;.include "../drivers/fonts/8x8.s"
 .endproc

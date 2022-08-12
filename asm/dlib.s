@@ -50,7 +50,7 @@ _screen_pointer: .res 3, $00 ;  Reserve a local zero page pointer for screen pos
 _data_pointer: .res 2, $00 ;  Reserve a local zero page pointer for data position
 
 
-.code
+.CODE
 
 .proc _setVideoMode: near
     STA $df80

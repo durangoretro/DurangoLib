@@ -2,6 +2,11 @@
 ; (c) 2019-2022 Carlos J. Santisteban
 ; last modified 20190521-1009
 
+.export cio_fnt
+
+.RODATA
+
+cio_fnt:
 ; ASCII $00 - NULL / centre filled square
 	.byt	%11111111
 	.byt	%10000001
