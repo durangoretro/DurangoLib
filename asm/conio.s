@@ -67,7 +67,7 @@
 ; _conio_vbot (new, first VRAM page, allows screen switching upon FF)
 ; _conio_vtop (new, first non-VRAM page, allows screen switching upon FF)
 
-.(
+.proc _conio: near
 ; *******************
 ; *** definitions ***
 ; *******************
@@ -96,6 +96,7 @@ cio_pt	= _screen_pointer	; (screen pointer)
 ; ******************
 ; *** CONIO code ***
 ; ******************
+	.PSC02					; Enable 65C02 instructions set
 ;	TYA						; is going to be needed here anyway
 	LDX _conio_cbin			; check whether in binary/multibyte mode
 	BEQ cio_cmd				; if not, check whether command (including INPUT) or glyph
@@ -751,5 +752,5 @@ cio_mbm:
 	.word	cn_atyx			; 8= X to be set and return to normal
 
 cio_fnt:
-.include "../drivers/fonts/8x8.s"
-.)
+;.include "../drivers/fonts/8x8.s"
+.endproc
