@@ -2,6 +2,9 @@
 .import incsp5
 .importzp  sp
 
+.export _conio_ccol
+.export _conio_cbin
+
 .export _setVideoMode
 .export _drawPixelPair
 .export _waitVsync
@@ -32,8 +35,8 @@ _conio_cbin:	.byt	0				; integrated picoVDU/Durango-X specifics *** MUST be rese
 _conio_fnt:		.word	0				; pointer to relocatable 2KB font file (inited by FF)
 _conio_mask:	.byt	0				; for inverse/emphasis mode
 _conio_chalf:	.byt	0				; remaining pages to write
-_conio_sind:	.dsb	3, 0
-_conio_ccol:	.dsb	4, 0			; array of two-pixel combos, will store ink & paper, standard PPPPIIII at [1] (reconstructed by FF from [1])
+_conio_sind:	.res	3, $00
+_conio_ccol:	.res	4, $00			; array of two-pixel combos, will store ink & paper, standard PPPPIIII at [1] (reconstructed by FF from [1])
 _conio_ctmp:
 _conio_cbyt:	.byt	0				; temporary glyph storage
 _conio_ccnt:	.byt	0				; bytes per raster counter, other tmp
@@ -546,5 +549,5 @@ loop:
 .endproc
 
 .proc _conio: near
-.include "conio.s"
+    NOP
 .endproc
