@@ -68,6 +68,25 @@
 ; _conio_vtop (new, first non-VRAM page, allows screen switching upon FF)
 
 .import cio_fnt
+.import _screen_pointer
+.import _data_pointer
+
+.BSS
+; specific CONIO variables
+_conio_cbin:	.byt	0				; integrated picoVDU/Durango-X specifics *** MUST be reset before first FF
+_conio_fnt:		.word	0				; pointer to relocatable 2KB font file (inited by FF)
+_conio_mask:	.byt	0				; for inverse/emphasis mode
+_conio_chalf:	.byt	0				; remaining pages to write
+_conio_sind:	.res	3, $00
+_conio_ccol:	.res	4, $00			; array of two-pixel combos, will store ink & paper, standard PPPPIIII at [1] (reconstructed by FF from [1])
+_conio_ctmp:
+_conio_cbyt:	.byt	0				; temporary glyph storage
+_conio_ccnt:	.byt	0				; bytes per raster counter, other tmp
+_conio_ciop:	.word	$6000			; cursor position (inited by FF)
+_conio_vbot:	.byt	$60				; page start of screen at current hardware setting (updated upon FF)
+_conio_vtop:	.byt	$80				; first non-VRAM page (updated upon FF)
+_conio_io9:		.byt	0				; received keypress
+
 
 .CODE
 
