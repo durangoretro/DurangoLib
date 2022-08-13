@@ -2,8 +2,8 @@
 .import incsp5
 .importzp  sp
 
-.export _screen_pointer
-.export _data_pointer
+.exportzp _screen_pointer
+.exportzp _data_pointer
 
 .export _setVideoMode
 .export _drawPixelPair

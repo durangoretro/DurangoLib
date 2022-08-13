@@ -68,10 +68,17 @@
 ; _conio_vtop (new, first non-VRAM page, allows screen switching upon FF)
 
 .import cio_fnt
-.import _screen_pointer
-.import _data_pointer
+.importzp _screen_pointer
+.importzp _data_pointer
+
+.ZEROPAGE
+; *** ZP from lib ***
+cio_src	= _data_pointer		; (pointer to glyph definitions)
+cio_pt	= _screen_pointer	; (screen pointer)
+
 
 .BSS
+; *** non-ZP memory usage, new on lib ***
 ; specific CONIO variables
 _conio_cbin:	.byt	0				; integrated picoVDU/Durango-X specifics *** MUST be reset before first FF
 _conio_fnt:		.word	0				; pointer to relocatable 2KB font file (inited by FF)
@@ -109,12 +116,6 @@ BM_INK	= 2
 BM_PPR	= 4
 BM_ATY	= 6
 BM_ATX	= 8
-
-; *** ZP from lib ***
-cio_src	= _data_pointer		; (pointer to glyph definitions)
-cio_pt	= _screen_pointer	; (screen pointer)
-
-; *** non-ZP memory usage, new on lib ***
 
 ; ******************
 ; *** CONIO code ***
