@@ -71,6 +71,9 @@
 .importzp _screen_pointer
 .importzp _data_pointer
 
+.export _conio_ccol
+.export _conio_cbin
+
 .ZEROPAGE
 ; *** ZP from lib ***
 cio_src	= _data_pointer		; (pointer to glyph definitions)
@@ -345,7 +348,7 @@ cn_hmok:
 	BNE cn_ok				; below limit means no scroll
 ; ** scroll routine **
 ; rows are 256 bytes apart in hires mode, but 512 in colour mode
-	LDY #<pvdu				; LSB *must* be zero, anyway
+	LDY #$00				; LSB *must* be zero, anyway
 ; MSB is actually OK for destination, but take from current value
 	LDX _conio_vbot
 	STY cio_pt				; set both LSBs
@@ -595,7 +598,7 @@ md_ppr:
 
 cio_home:
 ; just reset cursor pointer, to be done after (or before!) CLS
-	LDY #<pvdu				; base address for all modes, actually 0
+	LDY #$00				; base address for all modes, actually 0
 	LDA _conio_vbot			; current screen setting!
 	STY _conio_ciop			; just set pointer
 	STA _conio_ciop+1
