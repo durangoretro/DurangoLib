@@ -37,7 +37,7 @@ $(BUILD_DIR)/wait.o: $(ASM_DIR)/wait.s
 	ca65 -t none --cpu 65C02 $(ASM_DIR)/wait.s -o $(BUILD_DIR)/wait.o
 
 $(BUILD_DIR)/durango.lib: $(BUILD_DIR)/ $(BUILD_DIR)/dlib.o $(BUILD_DIR)/conio.o $(BUILD_DIR)/8x8.o $(BUILD_DIR)/sbc.lib $(BUILD_DIR)/interrupt.o $(BUILD_DIR)/vectors.o $(BUILD_DIR)/wait.o
-	ar65 r $(BUILD_DIR)/durango.lib $(BUILD_DIR)/dlib.o $(BUILD_DIR)/conio.o $(BUILD_DIR)/8x8.o $(BUILD_DIR)/interrupt.o $(BUILD_DIR)/wait.o
+	ar65 r $(BUILD_DIR)/durango.lib $(BUILD_DIR)/dlib.o $(BUILD_DIR)/8x8.o $(BUILD_DIR)/conio.o $(BUILD_DIR)/interrupt.o $(BUILD_DIR)/wait.o
 
 $(BUILD_DIR)/sbc.lib: $(BUILD_DIR)/crt0.o
 	cp /usr/share/cc65/lib/supervision.lib $(BUILD_DIR)/sbc.lib && ar65 a $(BUILD_DIR)/sbc.lib $(BUILD_DIR)/crt0.o

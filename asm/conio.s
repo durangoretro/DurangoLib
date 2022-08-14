@@ -92,11 +92,12 @@ _conio_ccol:	.res	4, $00			; array of two-pixel combos, will store ink & paper, 
 _conio_ctmp:
 _conio_cbyt:	.byt	0				; temporary glyph storage
 _conio_ccnt:	.byt	0				; bytes per raster counter, other tmp
+_conio_io9:		.byt	0				; received keypress
+
+.DATA
 _conio_ciop:	.word	$6000			; cursor position (inited by FF)
 _conio_vbot:	.byt	$60				; page start of screen at current hardware setting (updated upon FF)
 _conio_vtop:	.byt	$80				; first non-VRAM page (updated upon FF)
-_conio_io9:		.byt	0				; received keypress
-
 
 .CODE
 
