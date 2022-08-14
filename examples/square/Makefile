@@ -2,7 +2,7 @@ BUILD_DIR=bin
 SOURCE_DIR=src
 COMPILER_OPT= -I ../../inc --cpu 6502
 ASM_OPT = -t none
-LINKER_LIBS= ../../bin/vectors.o ../../bin/durango.lib  ../../bin/sbc.lib
+LINKER_LIBS= ../../bin/dlib.o ../../bin/8x8.o ../../bin/conio.o ../../bin/interrupt.o ../../bin/wait.o ../../bin/vectors.o ../../bin/sbc.lib
 LINKER_OPT= -C ../../cfg/durango.cfg
 LINKER_OPT_16= -C ../../cfg/durango16k.cfg
 

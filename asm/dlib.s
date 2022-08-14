@@ -2,8 +2,8 @@
 .import incsp5
 .importzp  sp
 
-.export _conio_ccol
-.export _conio_cbin
+.exportzp _screen_pointer
+.exportzp _data_pointer
 
 .export _setVideoMode
 .export _drawPixelPair
@@ -30,27 +30,13 @@ _ycoord: .byt $00
 _current_color: .byt $00
 _temp1: .byt $00
 _temp2: .byt $00
-; specific CONIO variables
-_conio_cbin:	.byt	0				; integrated picoVDU/Durango-X specifics *** MUST be reset before first FF
-_conio_fnt:		.word	0				; pointer to relocatable 2KB font file (inited by FF)
-_conio_mask:	.byt	0				; for inverse/emphasis mode
-_conio_chalf:	.byt	0				; remaining pages to write
-_conio_sind:	.res	3, $00
-_conio_ccol:	.res	4, $00			; array of two-pixel combos, will store ink & paper, standard PPPPIIII at [1] (reconstructed by FF from [1])
-_conio_ctmp:
-_conio_cbyt:	.byt	0				; temporary glyph storage
-_conio_ccnt:	.byt	0				; bytes per raster counter, other tmp
-_conio_ciop:	.word	$6000			; cursor position (inited by FF)
-_conio_vbot:	.byt	$60				; page start of screen at current hardware setting (updated upon FF)
-_conio_vtop:	.byt	$80				; first non-VRAM page (updated upon FF)
-_conio_io9:		.byt	0				; received keypress
 
 .zeropage
 _screen_pointer: .res 3, $00 ;  Reserve a local zero page pointer for screen position
 _data_pointer: .res 2, $00 ;  Reserve a local zero page pointer for data position
 
 
-.segment "CODE"
+.CODE
 
 .proc _setVideoMode: near
     STA $df80
