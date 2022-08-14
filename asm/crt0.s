@@ -5,7 +5,7 @@
 ; Startup code for cc65 (Single Board Computer version)
 
 .export   _init, _exit
-.import   _main, _disableDoubleBuffer
+.import   _main, _disableDoubleBuffer, _conio, _conio_ccol, _conio_cbin
 
 .export   __STARTUP__ : absolute = 1        ; Mark as startup
 .import __STACKSTART__, __STACKSIZE__
@@ -23,6 +23,9 @@
 ; A little light 6502 housekeeping
 
 _init:
+; ---------------------------------------------------------------------------  
+; Enable the 65C02 instructions set
+          .PSC02
 ; ---------------------------------------------------------------------------  
 ; Disable hardware periodic interrupt
           SEI                          ; Disable interrupts
