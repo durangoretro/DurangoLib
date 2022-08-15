@@ -1,21 +1,19 @@
 ; Durango-X filled rectangle routine
 ; (c) 2022 Carlos J. Santisteban
-; last modified 20220814-2353
+; last modified 20220815-1755
 
-.bss
-; *** input ***
-	*	= $F4				; *** placeholder (zpar2) ***
+; *** input *** presumed offsets from (SP)
 
-x1:		.byt	0			; NW corner x coordinate (<128 in colour, <256 in HIRES), but all NW/NE/SW/SE combos are accepted
-y1:		.byt	0			; NW corner y coordinate (<128 in colour, <256 in HIRES), but all NW/NE/SW/SE combos are accepted
-x2:		.byt	0			; _not included_ SE corner x coordinate (<128 in colour, <256 in HIRES), but all NW/NE/SW/SE combos are accepted
-y2:		.byt	0			; _not included_ SE corner y coordinate (<128 in colour, <256 in HIRES), but all NW/NE/SW/SE combos are accepted
-col:	.byt	0			; pixel colour, in II format (17*index), ignored in HIRES (actually zpar)
+x1	= 5						; NW corner x coordinate (<128 in colour, <256 in HIRES), but all NW/NE/SW/SE combos are accepted
+y1	= 4						; NW corner y coordinate (<128 in colour, <256 in HIRES), but all NW/NE/SW/SE combos are accepted
+x2	= 3						; _not included_ SE corner x coordinate (<128 in colour, <256 in HIRES), but all NW/NE/SW/SE combos are accepted
+y2	= 2						; _not included_ SE corner y coordinate (<128 in colour, <256 in HIRES), but all NW/NE/SW/SE combos are accepted
+col	= 1						; pixel colour, in II format (17*index), ignored in HIRES
 
 ; *** zeropage usage and local variables ***
 	*	= $E4				; *** placeholder (local1) ***
 
-cio_pt:	.word	0			; screen pointer
+cio_pt:	.word	0			; screen pointer (may reuse from CONIO)
 
 ; *** other variables (not necessarily in zero page) ***
 exc:	.byt	0			; flag for incomplete bytes at each side (could be elshewhere)
@@ -31,39 +29,57 @@ bytes:	.byt	0			; drawn line width (could be elsewhere)
 
 filled:
 ; first of all, check whether coordinates are inverted in any way, to get them sorted as NW-SE
-	LDA x2					; should be W
-	CMP x1					; thus less than E
+	LDY #x2					; should be W
+	LDA (SP), Y
+	LDY #x1					; thus less than E
+	CMP (SP), Y
 	BEQ exit				; don't draw anything if zero width!
 	BCS x_ok
-		LDX x1				; otherwise, swap x1-x2
-		STX x2
-		STA x1
+		TAX					; otherwise, swap x1-x2, keep older x2
+		LDA (SP), Y			; get x1
+		LDY #x2
+		STA (SP), Y			; set x2 as older x1
+		TXA					; retrieve older x2
+		LDY #x1
+		STA (SP), Y			; store older x2 value into x1
 x_ok:
-	LDA y2					; should be S
-	CMP y1					; thus less than N
+	LDY #y2					; should be S
+	LDA (SP), Y
+	LDY #y1					; thus less than N
+	CMP (SP), Y
 	BEQ exit				; don't draw anything if zero height!
 	BCS y_ok
-		LDX y1				; otherwise swap y1-y2
-		STX y2
-		STA y1
+		TAX					; otherwise, swap y1-y2, keep older y2
+		LDA (SP), Y			; get y1
+		LDY #y2
+		STA (SP), Y			; set y2 as older y1
+		TXA					; retrieve older y2
+		LDY #y1
+		STA (SP), Y			; store older y2 value into y1
 y_ok:
 ; may now compute number of lines and bytes
-	LDA x1					; lower limit
+	LDY #x1					; lower limit
+	LDA (SP), Y
 	LSR						; check odd bit into C
-	LDA x2					; higher limit...
+	LDY #x2					; higher limit...
+	LDA (SP), Y
 	ADC #0					; ...needs one more if lower was odd
 	SEC
-	SBC x1					; roughly number of pixels
+	LDY #x1					; roughly number of pixels
+	SBC (SP), Y
 	LSR						; half of that, is bytes
 	ROR exc					; E pixel is active, will end at D6 (after second rotation)
 	STA bytes
 ; number of lines is straightforward
-	LDA y2
+	LDY #y2
+	LDA (SP), Y
 	SEC
-	SBC y1
+	LDY #y1
+	SBC (SP), Y
 	STA lines				; all OK
 ; compute NW screen address (once)
-	LDA y1					; get North coordinate... (3)
+	LDY #y1					; get North coordinate... (3)
+	LDA (SP), Y
 	STA cio_pt+1			; will be operated later
 	LDA #0					; this will be stored at cio_pt
 	LSR cio_pt+1
@@ -77,20 +93,22 @@ exit:
 	RTS
 colfill:
 	STA cio_pt				; temporary storage
-	LDA x1					; get W coordinate
+	LDY #x1					; get W coordinate
+	LDA (SP), Y
 	LSR						; halved
 	ROR exc					; this will store W extra pixel at D7
 	CLC						; as we don't know previous exc contents
 	ADC cio_pt
 	STA cio_pt				; LSB ready, the ADD won't cross page
-	LDA IO8attr				; get flags... (4)
-	AND #$30				; ...for the selected screen... (2)
-	ASL						; ...and shift them to final position (2)
+	LDA _draw_buffer		; get screen... (4)
+;	AND #$30				; ...for the selected screen... (2)
+;	ASL						; ...and shift them to final position (2)
 	ORA cio_pt+1			; add to MSB (3+3)
 	STA cio_pt+1
 c_line:
 ; first draw whole bytes ASAP
-		LDA col				; get colour index twice
+		LDY #col			; get colour index twice *** might use local copy
+		LDA (SP), Y
 		LDY bytes			; number of bytes, except odd E
 			BEQ c_sete		; only one pixel (E), manage separately
 		DEY					; maximum offset
@@ -115,7 +133,8 @@ c_setw:
 		STA (cio_pt), Y
 		BIT exc				; unfortunately we must do this, or manage W pixel first
 		BPL c_eok			; no extra bit at E (or BVC?)
-			LDA col			; in case next filter gets triggered
+			LDY #col		; in case next filter gets triggered *** might use local copy
+			LDA (SP), Y
 c_sete:
 			LDY bytes		; this is now the proper index!
 			AND #$F0		; keep leftmost pixel
@@ -127,10 +146,10 @@ c_sete:
 c_eok:
 ; advance to next line
 		LDA #$40			; OK for colour
-		BIT IO8attr			; check mode
-		BPL nx_lin
-			LSR				; HIRES adds just $20
-nx_lin:
+;		BIT IO8attr			; check mode
+;		BPL nx_lin
+;			LSR				; HIRES adds just $20
+;nx_lin:
 		CLC
 		ADC cio_pt
 		STA cio_pt
