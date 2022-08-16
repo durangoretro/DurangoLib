@@ -20,7 +20,6 @@
 .export _disableDoubleBuffer
 .export _enableDoubleBuffer
 .export _swapBuffers
-.export _conio
 
 .bss
 _draw_buffer: .byt $00
@@ -534,6 +533,3 @@ loop:
     RTS
 .endproc
 
-.proc _conio: near
-    NOP
-.endproc

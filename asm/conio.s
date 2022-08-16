@@ -71,6 +71,7 @@
 .importzp _screen_pointer
 .importzp _data_pointer
 
+.export _conio
 .export _conio_ccol
 .export _conio_cbin
 
