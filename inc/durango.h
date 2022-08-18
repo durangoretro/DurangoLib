@@ -10,6 +10,10 @@ https://opensource.org/licenses/MIT.
 #ifndef _H_DURANGO
 #define _H_DURANGO
 
+/* type definitions */
+typedef unsigned char byte;
+typedef unsigned char u8;
+
 #include "video.h"
 
 
@@ -60,7 +64,7 @@ https://opensource.org/licenses/MIT.
  * @param y: Y Coord in pixels. The Y coordinate is from up to Down.
  * @param color: color to use. Check the video.h file for the macros for the 16 colors.
  */
-extern void __cdecl__ drawPixel(unsigned char x, unsigned char y, unsigned char color);
+extern void __cdecl__ drawPixel(u8 x, u8 y, u8 color);
 
 /**
  * Draw a Pixel Pair on Screen
@@ -68,7 +72,7 @@ extern void __cdecl__ drawPixel(unsigned char x, unsigned char y, unsigned char 
  * @param y: Y Coord in pixels. The Y coordinate is from up to Down.
  * @param color: color to use. Check the video.h file for the macros for the 16 colors.
  */
-extern void __cdecl__ drawPixelPair(unsigned char x, unsigned char y, unsigned char color);
+extern void __cdecl__ drawPixelPair(u8 x, u8 y, u8 color);
 
 /**
  * Wait until the Screen has been printed. That means that waits until the V Interruption.
@@ -79,25 +83,25 @@ extern void __fastcall__ waitVsync(void);
  * Wait until some frames has been printed
  * @param frames Number of frames to wait.
  */
-extern void __fastcall__ waitFrames(unsigned char frames);
+extern void __fastcall__ waitFrames(u8 frames);
 
 /**
  * Fill the entire Screen of one color
  * @param color one of the 16 colors to print. Check video.h to see the 16 colors Macros.
  */
-extern void __fastcall__ fillScreen(unsigned char color);
+extern void __fastcall__ fillScreen(u8 color);
 
 /**
  * Send to the console log (using debug port or using emulator console). the current value as Hex
  *@param value value to send.
  */
-extern void __fastcall__ consoleLogHex(unsigned char value);
+extern void __fastcall__ consoleLogHex(u8 value);
 
 /**
  * Send to the console log (using debug port or using emulator console). the current value as Char
  *@param value value to send.
  */
-extern void __fastcall__ consoleLogChar(unsigned char value);
+extern void __fastcall__ consoleLogChar(u8 value);
 
 /**
  * Send to the console log (using debug port or using emulator console). the current value as String.
@@ -112,7 +116,7 @@ extern void __fastcall__ consoleLogStr(char *str);
  * @param height: Rectangle height
  * @param color: color to use. Check the video.h file for the macros for the 16 colors.
  */
-extern void __cdecl__ drawRect(unsigned char x, unsigned char y, unsigned char width, unsigned char height, unsigned char color);
+extern void __cdecl__ drawRect(u8 x, u8 y, u8 width, u8 height, u8 color);
 
 /**
  * Read first gamepad. Get the current value of al the buttons pressed as a unsigned Chart.
@@ -121,7 +125,7 @@ extern void __cdecl__ drawRect(unsigned char x, unsigned char y, unsigned char w
  * 
  * @return Current value of the gamepad 1.
  */
-extern unsigned char __fastcall__ readGamepad1(void);
+extern u8 __fastcall__ readGamepad1(void);
 
 /**
  * Read second gamepad. Get the current value of al the buttons pressed as a unsigned Chart.
@@ -130,7 +134,7 @@ extern unsigned char __fastcall__ readGamepad1(void);
  * 
  * @return Current value of the gamepad 2.
  */
-extern unsigned char __fastcall__ readGamepad2(void);
+extern u8 __fastcall__ readGamepad2(void);
 
 /**
  * Disable double buffering. Default status.
@@ -149,7 +153,7 @@ extern void __fastcall__ swapBuffers(void);
 /**
  * Print one character/read from console device
  */
-extern unsigned char __fastcall__ conio(unsigned char y);
+extern u8 __fastcall__ conio(u8 y);
 
 #endif
 
