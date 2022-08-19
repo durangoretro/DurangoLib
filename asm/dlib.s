@@ -20,6 +20,8 @@
 .export _disableDoubleBuffer
 .export _enableDoubleBuffer
 .export _swapBuffers
+.export _drawTilemap
+.export _waitStart
 
 .bss
 _draw_buffer: .byt $00
