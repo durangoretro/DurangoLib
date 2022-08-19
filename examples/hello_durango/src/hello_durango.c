@@ -7,19 +7,22 @@
 #include <durango.h>
 
 int main(){
+	fillScreen(WHITE);
+	
 	// Draw some pixels
 	drawPixel(0, 0, ORANGE);
-	drawPixel(1, 0, YELLOW);
 	drawPixel(2, 0, LAVENDER_ROSE);
-	drawPixel(3, 0, CIAN);
-	drawPixel(4, 0, PINK_FLAMINGO);
-	drawPixel(5, 0, WHITE);
+	drawPixel(5, 0, RED);
+	
+	drawPixel(1, 1, ORANGE);
+	drawPixel(3, 1, LAVENDER_ROSE);
+	drawPixel(4, 1, RED);
 
 
 	// You can also draw Pixels in paris, which is faster
-    drawPixelPair(0, 1, RED);
-	drawPixelPair(2, 1, GREEN);
-	drawPixelPair(4, 1, BLUE);
+    drawPixelPair(0, 2, RED);
+	drawPixelPair(2, 2, GREEN);
+	drawPixelPair(4, 2, BLUE);
     
 	return 0;
 }

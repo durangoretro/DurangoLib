@@ -43,102 +43,26 @@ _data_pointer: .res 2, $00 ;  Reserve a local zero page pointer for data positio
 .endproc
 
 .proc _drawPixelPair: near
-	; Initialize screen position
-    LDA _draw_buffer
-    STA _screen_pointer+1
-    LDA #$00
-    STA _screen_pointer
-        
-    convert_coords_to_mem:
-    LDX #$00
-    ; Load y coord argument in acumulator
-    LDY #$01
-    LDA (sp), Y
-    ; Multiply y coord by 64 (64 bytes each row)
-    ASL
-    ; Also shift more sig byte
-    TAY
-    TXA
-    ROL
-    TAX
-    TYA
-    ; Shift less sig byte
-    ASL
-    ; Also shift more sig byte
-    TAY
-    TXA
-    ROL
-    TAX
-    TYA
-    ; Shift less sig byte
-    ASL
-    ; Also shift more sig byte
-    TAY
-    TXA
-    ROL
-    TAX
-    TYA
-    ; Shift less sig byte
-    ASL
-    ; Also shift more sig byte
-    TAY
-    TXA
-    ROL
-    TAX
-    TYA
-    ; Shift less sig byte
-    ASL
-    ; Also shift more sig byte
-    TAY
-    TXA
-    ROL
-    TAX
-    TYA
-    ; Shift less sig byte
-    ASL
-    ; Also shift more sig byte
-    TAY
-    TXA
-    ROL
-    TAX
-    TYA
-    ; Shift less sig byte
-    ; Add to initial memory address, and save it
-    CLC
-    ADC _screen_pointer
-    STA _screen_pointer
-
-    ; If overflow, add one to more sig byte
-    BCC conv_coor_mem_01
-    INX
-    conv_coor_mem_01:
-    ; Add calculated offset to $11 (more sig)
-    TXA
-    CLC
-    ADC _screen_pointer+1
-    STA _screen_pointer+1
-
-    ; Calculate X coord
-    ; Load x coord
+	; Load x coord
     LDY #$02
     LDA (sp), Y
-    ; Divide x coord by 2 (2 pixel each byte)
-    LSR
-    ; Add to memory address
-    CLC
-    ADC _screen_pointer
-    ; Store in video memory position
-    STA _screen_pointer
-    ; If overflow, increment left byte
-    BCC conv_coor_mem_02
-    INC _screen_pointer+1
-    conv_coor_mem_02:
-    ; Store color in accumulator
+    STA _xcoord
+    ; Load y coord
+    LDY #$01
+    LDA (sp), Y
+    STA _ycoord
+    ; Load color
     LDY #$00
     LDA (sp), Y
+    STA _current_color
+    
+    ; Convert to mem pointer
+    JSR _convert_coords_to_mem
+    
+    ; Store color in accumulator
+    LDA _current_color
     ; Draw actual pixel
-    LDY #$00
-    STA (_screen_pointer), Y
+    STA (_screen_pointer)
 
     ; Remove args from stack
     JSR incsp3
@@ -235,97 +159,46 @@ loop:
 ; _xcoord, _ycoord pixel coords
 ; _screen_pointer _screen_pointer+1 current video memory pointer
 .proc _convert_coords_to_mem:near
-    ; Init video pointer
-    LDA _draw_buffer
+    ; Clear X reg
+    LDX #$00
+    ; Clear _screen_pointer
+    STX _screen_pointer
+    ; Multiply y coord by 64 (64 bytes each row)
+    LDA _ycoord
+    LSR
     STA _screen_pointer+1
-    LDA #$00
+    ROR _screen_pointer
+    ; Sencond shift
+    LSR _screen_pointer+1
+    ROR _screen_pointer
+    
+    ; Add base memory address
+    CLC
+    LDA _screen_pointer+1
+    ADC _draw_buffer
+    STA _screen_pointer+1
+    LDA _screen_pointer
+    ADC #$00
     STA _screen_pointer
-    ; Check left/right
+    
+    ; Calculate X coord
+    ; Divide x coord by 2 (2 pixel each byte)
     LDA _xcoord
+    PHA
+    ; Check left/right
     AND #$01
     ROR
     ROR
     STA _screen_pointer+2
-    ; Clear X reg
-    LDX #$00
-    ; Multiply y coord by 64 (64 bytes each row)
-    LDA _ycoord
-    ASL
-    ; Also shift more sig byte
-    TAY
-    TXA
-    ROL
-    TAX
-    TYA
-    ; Shift less sig byte
-    ASL
-    ; Also shift more sig byte
-    TAY
-    TXA
-    ROL
-    TAX
-    TYA
-    ; Shift less sig byte
-    ASL
-    ; Also shift more sig byte
-    TAY
-    TXA
-    ROL
-    TAX
-    TYA
-    ; Shift less sig byte
-    ASL
-    ; Also shift more sig byte
-    TAY
-    TXA
-    ROL
-    TAX
-    TYA
-    ; Shift less sig byte
-    ASL
-    ; Also shift more sig byte
-    TAY
-    TXA
-    ROL
-    TAX
-    TYA
-    ; Shift less sig byte
-    ASL
-    ; Also shift more sig byte
-    TAY
-    TXA
-    ROL
-    TAX
-    TYA
-    ; Shift less sig byte
-    ; Add to initial memory address, and save it
-    CLC
-    ADC _screen_pointer
-    STA _screen_pointer
-
-    ; If overflow, add one to more sig byte
-    BCC conv_coor_mem_01
-    INX
-    conv_coor_mem_01:
-    ; Add calculated offset to _screen_pointer+1 (more sig)
-    TXA
-    CLC
-    ADC _screen_pointer+1
-    STA _screen_pointer+1
-
-    ; Calculate X coord
-    ; Divide x coord by 2 (2 pixel each byte)
-    LDA _xcoord
+    PLA
     LSR
     ; Add to memory address
     CLC
     ADC _screen_pointer
-    ; Store in video memory position
     STA _screen_pointer
-    ; If overflow, increment left byte
-    BCC conv_coor_mem_02
-    INC _screen_pointer+1
-    conv_coor_mem_02:
+    LDA _screen_pointer+1
+    ADC #$00
+    STA _screen_pointer+1
     RTS
 .endproc
 
