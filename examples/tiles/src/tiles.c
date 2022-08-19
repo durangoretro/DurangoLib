@@ -6,6 +6,7 @@
 
 #include <durango.h>
 #include "tiles.h"
+#include "boat.h"
 
 int main(){
 	    
