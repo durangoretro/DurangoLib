@@ -6,7 +6,7 @@ LINKER_LIBS= ../../bin/dlib.o ../../bin/8x8.o ../../bin/conio.o ../../bin/interr
 LINKER_OPT= -C ../../cfg/durango.cfg 
 LINKER_OPT_16= -C ../../cfg/durango16k.cfg
 
-all: tiles.bin tiles_16k.bin
+all: tiles.bin
 
 tiles.bin: $(BUILD_DIR)/ $(BUILD_DIR)/tiles.o
 	ld65 $(LINKER_OPT) $(BUILD_DIR)/tiles.o $(LINKER_LIBS) -o tiles.bin 
