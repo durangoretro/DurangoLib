@@ -151,9 +151,15 @@ extern void __fastcall__ enableDoubleBuffer(void);
 extern void __fastcall__ swapBuffers(void);
 
 /**
- * Print one character/read from console device
+ * Print one character/read from console device.
  */
 extern u8 __fastcall__ conio(u8 y);
 
+extern u8 __fastcall__ waitStart(void);
+
+/**
+ * Fill screen with supplied tilemap.
+ */
+extern void __cdecl__ drawTilemap(u8 *tiles, u8 *map);
 #endif
 

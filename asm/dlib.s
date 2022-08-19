@@ -406,3 +406,12 @@ loop:
     RTS
 .endproc
 
+.proc _drawTilemap: near
+
+	RTS
+.endproc
+
+.proc _waitStart: near
+	
+	RTS
+.endproc
