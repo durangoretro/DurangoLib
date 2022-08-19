@@ -412,11 +412,10 @@ loop:
 .endproc
 
 .proc _waitStart: near
-    LDX #$00
+    LDA #$00
     wait_loop:
     BIT $DF9C
-	INX
+	INA
     BVC wait_loop
-	TXA
 	RTS
 .endproc
