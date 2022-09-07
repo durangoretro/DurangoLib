@@ -152,13 +152,23 @@ extern void __fastcall__ swapBuffers(void);
 
 /**
  * Print one character/read from console device.
+ * @param y character to print
+ * 
+ * @return Error Code Character or printed
  */
 extern u8 __fastcall__ conio(u8 y);
 
+
+/**
+ * Wait Until Start Button Is Pressed
+ * @return Returns number cicles until Start Button is Pressed
+ */
 extern u8 __fastcall__ waitStart(void);
 
 /**
  * Fill screen with supplied tilemap.
+ * @param tiles tile Array of 8x8 pixel
+ * @param map Map Array
  */
 extern void __cdecl__ drawTilemap(u8 *tiles, u8 *map);
 #endif
