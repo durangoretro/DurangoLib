@@ -2,7 +2,7 @@
 ; based on Durango-X firmware console 0.9.6b4
 ; 16-colour 16x16 text  _or_ b&w 32x32 text
 ; (c) 2021-2022 Carlos J. Santisteban
-; last modified 20220811-0004
+; last modified 20220913-2119
 
 ; ****************************************
 ; CONIO, simple console driver in firmware
@@ -20,14 +20,14 @@
 ;		9	= TAB (x+8 MOD 8 in any case)
 ;		10	= line feed (cursor down, direct jump needs no Y set)
 ;		11	= cursor up
-;		12	= clear screen AND initialise device
+;		12	= clear screen
 ;		13	= newline (actually LF after CR, eg. set Y to anything but 1 so DEY clears Z and does LF)
 ;		14	= inverse video
 ;		15	= true video
 ;		16	= DLE, do not execute next control char
-;		17	= cursor on (no cursor yet?) actually show current position for a split second
+;		17	= cursor on
 ;		18	= set ink colour (MOD 16 for colour mode, hires will set it as well but will be ignored)*
-;		19	= cursor off (no cursor yet, simply IGNORED)
+;		19	= cursor off
 ;		20	= set paper colour (ditto)*
 ;		21	= home without clear
 ;		23	= set cursor position**
@@ -110,6 +110,8 @@ _conio_vtop:	.byt	$80				; first non-VRAM page (updated upon FF)
 IO8attr	= $DF80				; compatible IO8lh for setting attributes (d7=HIRES, d6=INVERSE, now d5-d4 include screen block)
 IO8blk	= $DF88				; video blanking signals
 IO9di	= $DF9A				; data input (TBD)
+IO9nes0	= $DF9C				; gamepad interface addresses
+IO9nes1	= $DF9D
 IOBeep	= $DFBF				; canonical buzzer address (d0)
 
 ; *** code constants ***
@@ -730,21 +732,108 @@ do_atx:
 ; **********************
 ; **********************
 ; IO9 port is read, normally 0
-; any non-zero value is stored and returned the first time, otherwise returns empty (C set)
+; any non-zero value is stored and returned the first time, otherwise returns 0 (EMPTY)
 ; any repeated characters must have a zero inbetween, 10 ms would suffice (perhaps as low as 5 ms)
 cn_in:
 	LDA IO9di				; get current data at port *** must set lower address nibble
 ; *** should this properly address a matrix keyboard?
 	BEQ cn_empty			; no transfer is in the making
-		CMP _conio_io9		; otherwise compare with last received
+cn_chk:
+	CMP _conio_io9		; otherwise compare with last received
 	BEQ cn_ack				; same as last, keep trying
 		STA _conio_io9		; this is received and different
-		CLC
 		RTS				; send received
 cn_empty:
 	STA _conio_io9			; keep clear
 cn_ack:
-	SEC
+; *************************************************
+; *** optional module for key-by-NESpad control ***
+	JSR nes_pad				; check gamepad
+; d7-d0 = AtBeULDR format
+		LSR					; check right
+		BCC no_r
+			INC fw_knes		; ASCII+1
+			JMP nes_upd		; show new character... and return
+no_r:
+		LSR					; check down
+		BCC no_d
+			LDA fw_knes
+			SEC
+			SBC #32			; ASCII-32
+			STA fw_knes
+			JMP nes_upd		; show new character... and return
+no_d:
+		LSR					; check left
+		BCC no_l
+			DEC fw_knes		; ASCII-1
+			JMP nes_upd		; show new character... and return
+no_l:
+		LSR					; check up
+		BCC no_u
+			LDA fw_knes
+			CLC
+			ADC #32			; ASCII+32
+			STA fw_knes
+			JMP nes_upd		; show new character... and return
+no_u:
+		LSR					; check select (=ESCAPE)
+		BCC no_sel
+			JSR nes_del		; delete current and wait
+			LDY #27			; insert ESC...
+			JMP cn_chk		; ...and process as if pressed
+no_sel:
+		LSR					; check B (=BACKSPACE)
+		BCC no_b
+			JSR nes_del		; delete current and wait
+			LDY #8			; insert BS...
+			JMP cn_chk		; ...and process as if pressed
+no_b:
+		LSR					; check start (=RETURN)
+		BCC no_st
+			JSR nes_del		; wait, at least
+			LDY #13			; insert CR...
+			JMP cn_chk		; ...and process as if pressed
+no_st:
+		LSR					; check A (Confirm character)
+		BCC nes_none
+			JSR nes_wait	; wait for button up
+			LDA #7			; BEL
+			JSR cio_cmd
+			LDY fw_knes		; get selected keycode
+			JMP cn_chk		; ...and process as if pressed
+; *** extra routines for KBBYPAD module ***
+nes_pad:					; *** read pad value in A ***
+	STA IO9nes0				; latch pad status
+	LDX #8					; number of bits to read
+nes_loop:
+		STA IO9nes1			; send clock pulse
+		DEX
+		BNE nes_loop		; all bits read @ IO9nes0
+	LDA IO9nes0				; get bits
+	EOR #$FF				; *** *** temporary fix for new negative logic *** ***
+	RTS
+
+nes_upd:					; *** show current character ***
+	LDA fw_knes				; temporary ASCII
+	JSR cio_prn				; direct print
+	LDA #2					; LEFT cursor
+	JSR cio_cmd				; return cursor
+	BRA nes_wait			; and wait for button release!
+
+nes_del:					; *** delete temporary char ***
+	LDA #' '				; print a space
+	JSR cio_prn				; direct print
+	LDA #2					; LEFT cursor
+	JSR cio_cmd				; return cursor...
+nes_wait:
+		JSR nes_pad			; ...but wait until button is released
+		BNE nes_wait
+;	BEQ nes_none			; standard exit, just in case
+; *** end of routines ***
+nes_none:
+; *** end of optional KBBYPAD module ***
+; **************************************
+	LDA #0				; EMPTY value
 	RTS					; *** must indicate error somehow ***
 
 ; **************************************************
@@ -756,9 +845,9 @@ cio_ctl:
 	.word	cn_in			; 0, INPUT mode
 	.word	cn_cr			; 1, CR
 	.word	cur_l			; 2, cursor left
-	.word	cio_prn			; 3 ***
-	.word	cio_prn			; 4 ***
-	.word	cio_prn			; 5 ***
+	.word	ignore			; 3 ***
+	.word	ignore			; 4 ***
+	.word	ignore			; 5 ***
 	.word	cur_r			; 6, cursor right
 	.word	cio_bel			; 7, beep
 	.word	cio_bs			; 8, backspace
@@ -770,20 +859,20 @@ cio_ctl:
 	.word	cn_so			; 14, inverse
 	.word	cn_si			; 15, true video
 	.word	md_dle			; 16, DLE, set flag
-	.word	cio_cur			; 17, show cursor position
+	.word	cio_cur			; 17, show cursor
 	.word	md_ink			; 18, set ink from next char
-	.word	ignore			; 19, ignore XOFF (as there is no cursor to hide)
+	.word	ignore			; 19, hide cursor
 	.word	md_ppr			; 20, set paper from next char
 	.word	cio_home		; 21, home (what is done after CLS)
-	.word	cio_prn			; 22 ***
+	.word	ignore			; 22 ***
 	.word	md_atyx			; 23, ATYX will set cursor position
-	.word	cio_prn			; 24 ***
-	.word	cio_prn			; 25 ***
-	.word	cio_prn			; 26 ***
-	.word	cio_prn			; 27 ***
-	.word	cio_prn			; 28 ***
-	.word	cio_prn			; 29 ***
-	.word	cio_prn			; 30 ***
+	.word	ignore			; 24 ***
+	.word	ignore			; 25 ***
+	.word	ignore			; 26 ***
+	.word	ignore			; 27 ***
+	.word	ignore			; 28 ***
+	.word	ignore			; 29 ***
+	.word	ignore			; 30 ***
 	.word	ignore			; 31, IGNORE back to text mode
 
 ; *** table of pointers to multi-byte routines *** order must check BM_ definitions!
