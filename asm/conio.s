@@ -2,7 +2,7 @@
 ; based on Durango-X firmware console 0.9.6b4
 ; 16-colour 16x16 text  _or_ b&w 32x32 text
 ; (c) 2021-2022 Carlos J. Santisteban
-; last modified 20220913-2119
+; last modified 20220913-2204
 
 ; ****************************************
 ; CONIO, simple console driver in firmware
@@ -54,7 +54,6 @@
 
 ; *** other variables, perhaps in ZP ***
 ; _conio_cbyt (temporary glyph storage)
-; _conio_ccnt (another temporary storage) *** NO LONGER USED
 ; _conio_chalf (remaining pages to write)
 
 ; *** firmware variables to be reset upon FF ***
@@ -66,6 +65,14 @@
 ; _conio_cbin (binary or multibyte mode) *** MUST BE DONE BEFORE FIRST USE
 ; _conio_vbot (new, first VRAM page, allows screen switching upon FF)
 ; _conio_vtop (new, first non-VRAM page, allows screen switching upon FF)
+
+; *** new option, keyboard control by NES gamepad ***
+; *** UP/DOWN    = +/- 32 to ASCII                ***
+; *** LEFT/RIGHT = next/prev ASCII                ***
+; *** A          = put char into buffer           ***
+; *** B          = press BACKSPACE                ***
+; *** START      = press RETURN                   ***
+; *** SELECT     = press ESCAPE                   ***
 
 .import cio_fnt
 .importzp _screen_pointer
@@ -85,20 +92,20 @@ cio_pt	= _screen_pointer	; (screen pointer)
 ; *** non-ZP memory usage, new on lib ***
 ; specific CONIO variables
 _conio_cbin:	.byt	0				; integrated picoVDU/Durango-X specifics *** MUST be reset before first FF
-_conio_fnt:		.word	0				; pointer to relocatable 2KB font file (inited by FF)
+_conio_fnt:		.word	0				; pointer to relocatable 2KB font file (inited by FF?)
 _conio_mask:	.byt	0				; for inverse/emphasis mode
 _conio_chalf:	.byt	0				; remaining pages to write
 _conio_sind:	.res	3, $00
 _conio_ccol:	.res	4, $00			; array of two-pixel combos, will store ink & paper, standard PPPPIIII at [1] (reconstructed by FF from [1])
 _conio_ctmp:
 _conio_cbyt:	.byt	0				; temporary glyph storage
-_conio_ccnt:	.byt	0				; bytes per raster counter, other tmp
 _conio_io9:		.byt	0				; received keypress
 
 .DATA
 _conio_ciop:	.word	$6000			; cursor position (inited by FF)
 _conio_vbot:	.byt	$60				; page start of screen at current hardware setting (updated upon FF)
 _conio_vtop:	.byt	$80				; first non-VRAM page (updated upon FF)
+_conio_scur:	.byt	$00				; cursor mode (bit 7 = ON)
 
 .CODE
 
@@ -249,6 +256,10 @@ cpc_rend:					; end segment has not changed, takes 6x11 + 2x24 - 1, 113t (66+46-
 ; *** cursor advance *** placed here for convenience of printing routine
 ; **********************
 cur_r:
+	BIT _conio_scur			; if cursor is on... [NEW]
+	BPL do_cur_r
+		JSR draw_cur		; ...must delete previous one
+do_cur_r:
 	LDA #1					; base character width (in bytes) for hires mode
 	BIT IO8attr				; check mode
 	BMI rcu_hr				; already OK if hires
@@ -280,8 +291,11 @@ ck_wrap:
 wr_hr:
 	TYA						; prepare mask and guarantee Y>1 for auto LF
 	AND _conio_ciop			; are scanline bits clear?
-		BNE cn_begin		; nope, do NEWLINE
-	CLC
+		BNE do_cr			; nope, do NEWLINE
+	BIT _conio_scur			; if cursor is on... [NEW]
+	BPL do_ckw
+		JSR draw_cur		; ...must draw new one
+do_ckw:
 	RTS					; continue normally otherwise (better clear C)
 
 ; ************************
@@ -297,6 +311,10 @@ cur_l:
 ; colour mode subtracts 4, but only 1 if in hires
 ; only if LSB is not zero, assuming non-corrupted scanline bits
 ; could use N flag after subtraction, as clear scanline bits guarantee its value
+	BIT _conio_scur				; if cursor is on... [NEW]
+	BPL do_cur_l
+		JSR draw_cur		; ...must delete previous one
+do_cur_l:
 	LDA #1					; hires decrement (these 9 bytes are the same as cur_r)
 	BIT IO8attr
 	BMI cl_hr				; right mode for the decrement EEEEEK
@@ -309,7 +327,10 @@ cl_hr:
 	BMI cl_end				; ...ignore operation if went negative
 		STA _conio_ciop		; update pointer
 cl_end:
-	CLC
+	BIT _conio_scur			; if cursor is on... [NEW]
+	BPL do_cle
+		JSR draw_cur		; ...must draw new one
+do_cle:
 	RTS					; C known to be set, though
 
 cn_newl:
@@ -317,6 +338,12 @@ cn_newl:
 		TAY					; Y=26>1, thus allows full newline
 cn_begin:
 ; do CR... but keep Y
+	BIT _conio_scur			; if cursor is on... [NEW]
+	BPL do_cr
+		PHY					; CMOS only eeeeeek
+		JSR draw_cur		; ...must delete previous one
+		PLY
+do_cr:
 ; note address format is 011yyyys-ssxxxxpp (colour), 011yyyyy-sssxxxxx (hires)
 ; actually is a good idea to clear scanline bits, just in case
 	STZ _conio_ciop			; all must clear! helps in case of tab wrapping too (eeeeeeeeek...) *CMOS
@@ -341,6 +368,10 @@ cn_lf:
 ; do LF, adds 1 (hires) or 2 (colour) to MSB
 ; even simpler, INCrement MSB once... or two if in colour mode
 ; hopefully highest scan bit is intact!!!
+	BIT _conio_scur			; if cursor is on... [NEW]
+	BPL do_lf
+		JSR draw_cur		; ...must delete previous one
+do_lf:
 	INC _conio_ciop+1		; increment MSB accordingly, this is OK for hires
 	BIT IO8attr				; was it in hires mode?
 	BMI cn_hmok
@@ -385,15 +416,22 @@ sc_loop:
 	SBC #1					; with C set (hires) this subtracts 1, but 2 if C is clear! (colour)
 	STA _conio_ciop+1
 cn_ok:
-	CLC
+	BIT _conio_scur			; if cursor is on... [NEW]
+	BPL do_cnok
+		JSR draw_cur		; ...must draw new one
+do_cnok:
 	RTS					; note that some code might set C
 
 cn_tab:
 ; advance column to the next 8x position (all modes)
 ; this means adding 8 to LSB in hires mode, or 32 in colour mode
 ; remember format is 011yyyys-ssxxxxpp (colour), 011yyyyy-sssxxxxx (hires)
+	BIT _conio_scur			; if cursor is on... [NEW]
+	BPL do_tab
+		JSR draw_cur		; ...must delete previous one
+do_tab:
 	LDA #%11111000			; hires mask first
-	STA _conio_ctmp				; store temporarily
+	STA _conio_ctmp			; store temporarily
 	LDA #8					; lesser value in hires mode
 	BIT IO8attr				; check mode
 	BMI hr_tab				; if in hires, A is already correct
@@ -413,7 +451,7 @@ cio_bel:
 ; 40ms @ 1 kHz is 40 cycles
 ; the 500µs halfperiod is about 325t
 	PHP
-	SEI					; let's make things the right way
+	SEI						; let's make things the right way
 	LDX #79					; 80 half-cycles, will end with d0 clear
 cbp_pul:
 		STX IOBeep			; pulse output bit (4)
@@ -423,12 +461,16 @@ cbp_del:
 			BNE cbp_del		; each iteration is (2+3)
 		DEX					; go for next semicycle
 		BPL cbp_pul			; must do zero too, to clear output bit
-	PLP				; eeeeek
+	PLP						; eeeeek
 	RTS
 
 cio_bs:
 ; BACKSPACE, go back one char and clear cursor position
 	JSR cur_l				; back one char, if possible, then clear cursor position
+	BIT _conio_scur			; if cursor is on... [NEW]
+	BPL do_bs
+		JSR draw_cur		; ...must delete previous one
+do_bs:
 	LDY _conio_ciop
 	LDA _conio_ciop+1		; get current cursor position...
 	STY cio_pt
@@ -465,11 +507,18 @@ bs_scw:
 		PLA					; retrieved value, is there a better way?
 		DEC _conio_ctmp		; one scanline less to go
 		BNE bs_scan
-	CLC
-	RTS					; should be done
+	BIT _conio_scur			; if cursor is on... [NEW]
+	BPL end_bs
+		JSR draw_cur		; ...must delete previous one
+end_bs:
+	RTS						; should be done
 
 cio_up:
 ; cursor up, no big deal, will stop at top row (NMOS savvy, always 23b and 39t)
+	BIT _conio_scur			; if cursor is on... [NEW]
+	BPL do_cup
+		JSR draw_cur		; ...must delete previous one
+do_cup:
 	LDA IO8attr				; check mode
 	ROL						; now C is set in hires!
 	PHP						; keep for later?
@@ -483,8 +532,11 @@ cio_up:
 		ORA _conio_vbot		; EEEEEEK must complete pointer address (5b, 6t)
 		STA _conio_ciop+1
 cu_end:
-	CLC
-	RTS					; ending this with C set is a minor nitpick, must reset anyway
+	BIT _conio_scur			; if cursor is on... [NEW]
+	BPL do_cu_end
+		JSR draw_cur		; ...must draw new one
+do_cu_end:
+	RTS						; ending this with C set is a minor nitpick, must reset anyway
 
 ; FF, clear screen AND intialise values!
 cio_ff:
@@ -540,6 +592,10 @@ sc_clr:
 	LDX cio_pt+1			; but must check variable limits!
 	CPX _conio_vtop
 		BNE sc_clr
+	BIT _conio_scur			; if cursor is on... [NEW]
+	BPL do_ff
+		JSR draw_cur		; ...must draw new one, as the one from home was cleared
+do_ff:
 	RTS
 
 ; SO, set inverse mode
@@ -557,36 +613,22 @@ md_dle:
 ; DLE, set binary mode
 ;	LDX #BM_DLE				; X already set if 32
 	STX _conio_cbin			; set binary mode and we are done
-	RTS
-
-cio_cur:
-; XON, we have no cursor, but show its position for a moment
-	LDY _conio_ciop			; get current position pointer
-	LDX _conio_ciop+1
-	STY cio_pt
-	LDY #224				; offset for last scanline at cursor position... in hires
-	BIT IO8attr				; are we in colour mode? that offset won't be valid!
-	BMI ccur_ok				; hires mode, all OK
-		INX					; otherwise, must advance pointer MSB
-		LDY #192			; new LSB offset
-ccur_ok:
-	STX cio_pt+1			; pointer complete
-	JSR xon_inv				; invert current contents (will return to caller the second time!)
-	LDX #5					; 5 frames (0.1s)
-xon_del:
-			BIT IO8blk		; check blanking
-			BVS xon_del		; in case we are already blanking
-xon_wait:
-			BIT IO8blk		; check blanking
-			BVC xon_wait	; wait for it
-		DEX					; next frame
-		BNE xon_del
-xon_inv:
-	LDA (cio_pt), Y			; revert to original
-	EOR #$FF
-	STA (cio_pt), Y
 ignore:
 	RTS						; *** note generic exit ***
+
+cio_cur:
+; XON, we now have cursor! [NEW]
+	LDA #128				; flag for cursor on
+	TSB _conio_scur			; check previous flag (and set it now) *** CMOS only ***
+	BNE ignore				; if was set, shouldn't draw cursor again
+		JMP draw_cur		; go and return
+
+cio_curoff:
+; XOFF, disable cursor [NEW]
+	LDA #128				; flag for cursor on
+	TRB _conio_scur			; check previous flag (and clear it now)
+	BNE ignore				; if was set, shouldn't draw cursor again
+		JMP draw_cur		; go and return
 
 md_ink:
 ; just set binary mode for receiving ink! *** could use some tricks to unify with paper mode setting
@@ -602,6 +644,10 @@ md_ppr:
 
 cio_home:
 ; just reset cursor pointer, to be done after (or before!) CLS
+	BIT _conio_scur			; if cursor is on... [NEW]
+	BPL do_home
+		JSR draw_cur		; ...must draw new one
+do_home:
 	LDY #$00				; base address for all modes, actually 0
 	LDA _conio_vbot			; current screen setting!
 	STY _conio_ciop			; just set pointer
@@ -613,6 +659,33 @@ md_atyx:
 	LDX #BM_ATY				; next byte will set Y and then expect X for the next one
 	STX _conio_cbin			; set new mode, called routine will set back to normal
 	RTS
+
+draw_cur:
+; draw (XOR) cursor [NEW]
+	LDX _conio_ciop+1		; get cursor position
+	CPX _conio_vtop			; outside bounds?
+		BCS no_cur			; do not attempt to write!
+	LDY _conio_ciop
+	STY cio_pt				; set pointer LSB (common)
+	STX cio_pt+1			; set pointer MSB
+	BIT IO8attr				; check screen mode
+	BPL dc_col				; skip if in colour mode
+		LDY #224			; seven rasters down
+		LDX #1				; single byte cursor
+		BNE dc_loop			; no need for BRA
+dc_col:
+	INC cio_pt+1			; this goes into next page (4 rasters down)
+	LDY #192				; 3 rasters further down
+	LDX #4					; bytes per char raster
+dc_loop:
+		LDA (cio_pt), Y		; get screen data...
+		EOR #$FF			; ...invert it...
+		STA (cio_pt), Y		; ...and update it
+		INY					; next byte in raster
+		DEX
+		BNE dc_loop
+no_cur:
+	RTS						; should I clear C?
 
 ; *******************************
 ; *** some multibyte routines ***
@@ -861,7 +934,7 @@ cio_ctl:
 	.word	md_dle			; 16, DLE, set flag
 	.word	cio_cur			; 17, show cursor
 	.word	md_ink			; 18, set ink from next char
-	.word	ignore			; 19, hide cursor
+	.word	cio_curoff		; 19, hide cursor
 	.word	md_ppr			; 20, set paper from next char
 	.word	cio_home		; 21, home (what is done after CLS)
 	.word	ignore			; 22 ***
