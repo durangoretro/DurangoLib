@@ -1,8 +1,8 @@
 ; CONIO module for DurangoLib, CMOS 65C02 version
-; based on Durango-X firmware console 0.9.6b4
+; based on Durango-X firmware console 0.9.6b8 for minimOS
 ; 16-colour 16x16 text  _or_ b&w 32x32 text
 ; (c) 2021-2022 Carlos J. Santisteban
-; last modified 20220913-2204
+; last modified 20220913-2247
 
 ; ****************************************
 ; CONIO, simple console driver in firmware
@@ -56,15 +56,21 @@
 ; _conio_cbyt (temporary glyph storage)
 ; _conio_chalf (remaining pages to write)
 
+; *** firmware variables to be reset PRIOT TO FIRST USE ***
+; _conio_cbin (binary or multibyte mode) *** MUST BE DONE BEFORE FIRST USE
+; _conio_vbot (new, first VRAM page, allows screen switching upon FF) *** and MUST be set thru call upon framebuffer switching!
+; _conio_vtop (new, first non-VRAM page, allows screen switching upon FF) *** and MUST be set thru call upon framebuffer switching!
+; _conio_fnt.w (new, pointer to relocatable 2KB font file) *** should it be restored upon FF?
+; _conio_mask (for inverse/emphasis mode) *** should it be restored upon FF?
+; _conio_scur (cursor mode) *** should it be restored?
+
 ; *** firmware variables to be reset upon FF ***
 ; _conio_ccol.p (array 00.01.10.11 of two-pixel combos, will store ink & paper)
 ; * NEW* FF will reconstruct it from [1] (PAPER-INK)
 ; _conio_ciop.w (upper scan of cursor position)
-; _conio_fnt.w (new, pointer to relocatable 2KB font file)
-; _conio_mask (for inverse/emphasis mode)
-; _conio_cbin (binary or multibyte mode) *** MUST BE DONE BEFORE FIRST USE
-; _conio_vbot (new, first VRAM page, allows screen switching upon FF)
-; _conio_vtop (new, first non-VRAM page, allows screen switching upon FF)
+; _conio_fnt.w (new, pointer to relocatable 2KB font file) *** should it be restored?
+; _conio_mask (for inverse/emphasis mode) *** should it be restored?
+; _conio_scur (cursor mode) *** should it be restored?
 
 ; *** new option, keyboard control by NES gamepad ***
 ; *** UP/DOWN    = +/- 32 to ASCII                ***
@@ -556,22 +562,8 @@ cio_ff:
 	STY _conio_fnt			; set firmware pointer (will need that again after FF)
 	STA _conio_fnt+1
 ; standard CLS, reset cursor and clear screen
-	JSR cio_home			; reset cursor and load appropriate address
-; recompute MSB in A according to hardware
-	LDA IO8attr
-	AND #%00110000
-	ASL
-	TAX						; keep bottom of VRAM
-	ADC #$20				; C was clear b/c ASL
-	STA _conio_vtop			; eeeeek
-	TXA
-; * SAFE option *
-	BNE ff_ok
-		LDA #%00010000		; base address for 8K systems is 4K
-ff_ok:
-; * *
-	STA _conio_vbot			; store new variable
-	STA _conio_ciop+1		; must correct this one too
+	JSR cio_home			; reset cursor and load appropriate address in A/Y
+	JSR cio_swsc			; recompute screen address for framebuffer [NEW]
 	STY cio_pt				; set pointer (LSB=0)...
 	STA cio_pt+1
 ;	LDY #0					; usually not needed as screen is page-aligned! ...and clear whole screen, will return to caller
@@ -686,6 +678,29 @@ dc_loop:
 		BNE dc_loop
 no_cur:
 	RTS						; should I clear C?
+
+cio_swsc:
+; recompute MSB in A according to hardware [NEW, to be called upon framebuffer switch!]
+; must respect Y and modify A accordingly
+	LDA IO8attr				; *** direct calls omit this ***
+	AND #%00110000
+;switch_sc:
+	ASL
+	TAX						; keep bottom of VRAM
+	ADC #$20				; C was clear b/c ASL
+	STA _conio_vtop			; eeeeek
+	TXA
+; * SAFE option *
+	BNE ff_ok
+		LDA #%00010000		; base address for 8K systems is 4K
+ff_ok:
+; * *
+	STA _conio_vbot			; store new variable
+	LDA _conio_ciop+1
+	AND #%00011111			; keep high address of cursor position
+	ORA _conio_vbot			; ...but into new framebuffer
+	STA _conio_ciop+1		; must correct this one too *** maybe for regular use just be previously reset
+	RTS
 
 ; *******************************
 ; *** some multibyte routines ***
