@@ -10,13 +10,99 @@ https://opensource.org/licenses/MIT.
 #ifndef _H_DURANGO
 #define _H_DURANGO
 
-/* type definitions */
+/* TYPE DEFINITIONS */
 typedef unsigned char byte;
 typedef unsigned char u8;
 
-#include "video.h"
+/* PROCEDURES */
+extern void __fastcall__ setHiRes(unsigned char);
 
 
+/* COLOURS */
+/**
+ * Black Color
+ */
+#define BLACK 0x00
+
+/**
+ * Geen Color
+ */
+#define GREEN 0x11
+
+/**
+ * Red Color
+ */
+#define RED 0x22
+
+/**
+ * Orange Color
+ */
+#define ORANGE 0x33
+
+/**
+ * Pharmacy Green Color
+ */
+#define PHARMACY_GREEN 0x44
+
+/**
+ * Lime Color
+ */
+#define LIME 0x55
+
+/**
+ * Mystic Red Color
+ */
+#define MYSTIC_RED 0x66
+
+/**
+ * Yellow Color
+ */
+#define YELLOW 0x77
+
+/**
+ * Blue Color
+ */
+#define BLUE 0x88
+
+/**
+ * Deep Sky Blue Color
+ */
+#define DEEP_SKY_BLUE 0x99
+
+/**
+ * Magenta Color
+ */
+#define MAGENTA 0xaa
+
+/**
+ * Lavender Rose Color
+ */
+#define LAVENDER_ROSE 0xbb
+
+/**
+ * Navy Blue Color
+ */
+#define NAVY_BLUE 0xcc
+
+/**
+ * Cyan Color
+ */
+#define CIAN 0xdd
+
+/**
+ * Pink Color
+ */
+#define PINK_FLAMINGO 0xee
+
+/**
+ * White Color
+ */
+#define WHITE 0xff
+
+
+
+
+/* GAMEPAD BUTTONS */
 /**
  * BUTTON A 
  */
@@ -58,118 +144,6 @@ typedef unsigned char u8;
  */
 #define BUTTON_RIGHT 0x01
 
-/**
- * Draw a Pixel on Screen
- * @param x: X Coord in pixels. The x coordinate is from left to Rigth.
- * @param y: Y Coord in pixels. The Y coordinate is from up to Down.
- * @param color: color to use. Check the video.h file for the macros for the 16 colors.
- */
-extern void __cdecl__ drawPixel(u8 x, u8 y, u8 color);
 
-/**
- * Draw a Pixel Pair on Screen
- * @param x: X Coord in pixels. The x coordinate is from left to Rigth.
- * @param y: Y Coord in pixels. The Y coordinate is from up to Down.
- * @param color: color to use. Check the video.h file for the macros for the 16 colors.
- */
-extern void __cdecl__ drawPixelPair(u8 x, u8 y, u8 color);
-
-/**
- * Wait until the Screen has been printed. That means that waits until the V Interruption.
- */
-extern void __fastcall__ waitVsync(void);
-
-/**
- * Wait until some frames has been printed
- * @param frames Number of frames to wait.
- */
-extern void __fastcall__ waitFrames(u8 frames);
-
-/**
- * Fill the entire Screen of one color
- * @param color one of the 16 colors to print. Check video.h to see the 16 colors Macros.
- */
-extern void __fastcall__ fillScreen(u8 color);
-
-/**
- * Send to the console log (using debug port or using emulator console). the current value as Hex
- *@param value value to send.
- */
-extern void __fastcall__ consoleLogHex(u8 value);
-
-/**
- * Send to the console log (using debug port or using emulator console). the current value as Char
- *@param value value to send.
- */
-extern void __fastcall__ consoleLogChar(u8 value);
-
-/**
- * Send to the console log (using debug port or using emulator console). the current value as String.
- *@param value value to send.
- */
-extern void __fastcall__ consoleLogStr(char *str);
-
-/**
- * @param x: X Coord in pixels. The x coordinate is from left to Rigth.
- * @param y: Y Coord in pixels. The Y coordinate is from up to Down.
- * @param width: Rectangle width
- * @param height: Rectangle height
- * @param color: color to use. Check the video.h file for the macros for the 16 colors.
- */
-extern void __cdecl__ drawRect(u8 x, u8 y, u8 width, u8 height, u8 color);
-
-/**
- * Read first gamepad. Get the current value of al the buttons pressed as a unsigned Chart.
- * 
- * You can use a mask to ensure what button was pressed. Example: <pre>value & BUTTON_A</pre> Checks if the button A is pressed.
- * 
- * @return Current value of the gamepad 1.
- */
-extern u8 __fastcall__ readGamepad1(void);
-
-/**
- * Read second gamepad. Get the current value of al the buttons pressed as a unsigned Chart.
- * 
- * You can use a mask to ensure what button was pressed. Example: <pre>value & BUTTON_A</pre> Checks if the button A is pressed.
- * 
- * @return Current value of the gamepad 2.
- */
-extern u8 __fastcall__ readGamepad2(void);
-
-/**
- * Disable double buffering. Default status.
- */
-extern void __fastcall__ disableDoubleBuffer(void);
-/**
- * Enable screen double buffering.
- */
-extern void __fastcall__ enableDoubleBuffer(void);
-
-/**
- * Swap screen buffers.
- */
-extern void __fastcall__ swapBuffers(void);
-
-/**
- * Print one character/read from console device.
- * @param y character to print
- * 
- * @return Error Code Character or printed
- */
-extern u8 __fastcall__ conio(u8 y);
-
-
-/**
- * Wait Until Start Button Is Pressed
- * @return Returns number cicles until Start Button is Pressed
- */
-extern u8 __fastcall__ waitStart(void);
-
-/**
- * Fill screen with supplied tilemap.
- * @param tiles tile Array of 8x8 pixel
- * @param map Map Array
- */
-extern void __cdecl__ drawTilemap(u8 *tiles, u8 *map);
 #endif
 

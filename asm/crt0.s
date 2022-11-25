@@ -12,6 +12,7 @@
 
 .include  "zeropage.inc"
 .include "durango_hw.inc"
+.include "crt0.inc"
 
 ; Enable 65C02 instruction set
 .PC02
@@ -77,8 +78,8 @@ _init:
     BNE loop
     LDA GAMEPAD1
     LDX GAMEPAD2
-    STA GAMEPAD_MODE1
-    STX GAMEPAD_MODE2
+    STA GAMEPAD_MODE
+    STX GAMEPAD_MODE+1
     
     ; Enable Durango interrupts
     LDA #$01

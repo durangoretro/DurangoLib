@@ -10,43 +10,20 @@ COMPILE_OPTS = -c -I $(INCLUDE_DIRS) -Oir --cpu 65c02
 
 all: $(BUILD_DIR)/durango.lib
 
-
-
-$(BUILD_DIR)/video.o: $(BUILD_DIR)/ $(SOURCE_DIR)/video.c
-	cl65 $(COMPILE_OPTS) -o $(BUILD_DIR)/video.o $(SOURCE_DIR)/video.c
-
-$(BUILD_DIR)/dlib.o: $(ASM_DIR)/dlib.s
-	ca65 -t none --cpu 65C02 $(ASM_DIR)/dlib.s -o $(BUILD_DIR)/dlib.o
-
-$(BUILD_DIR)/conio.o: $(ASM_DIR)/conio.s
-	ca65 -t none --cpu 65C02 $(ASM_DIR)/conio.s -o $(BUILD_DIR)/conio.o
-	
-$(BUILD_DIR)/8x8.o: $(ASM_DIR)/8x8.s
-	ca65 -t none --cpu 65C02 $(ASM_DIR)/8x8.s -o $(BUILD_DIR)/8x8.o
-
-$(BUILD_DIR)/vectors.o: $(ASM_DIR)/vectors.s
-	ca65 -t none --cpu 65C02 $(ASM_DIR)/vectors.s -o $(BUILD_DIR)/vectors.o
-
-$(BUILD_DIR)/crt0.o: $(ASM_DIR)/crt0.s
+$(BUILD_DIR)/crt0.o: $(BUILD_DIR) $(ASM_DIR)/crt0.s  
 	ca65 -t none --cpu 65C02 $(ASM_DIR)/crt0.s -o $(BUILD_DIR)/crt0.o
+$(BUILD_DIR)/system.o: $(BUILD_DIR) $(ASM_DIR)/system.s
+	ca65 -t none --cpu 65C02 $(ASM_DIR)/system.s -o $(BUILD_DIR)/system.o
 
-$(BUILD_DIR)/interrupt.o: $(ASM_DIR)/interrupt.s
-	ca65 -t none --cpu 65C02 $(ASM_DIR)/interrupt.s -o $(BUILD_DIR)/interrupt.o
+$(BUILD_DIR)/durango.lib: $(BUILD_DIR) $(BUILD_DIR)/crt0.o $(BUILD_DIR)/system.o 
+	cp /usr/share/cc65/lib/supervision.lib $(BUILD_DIR)/durango.lib && ar65 a $(BUILD_DIR)/durango.lib $(BUILD_DIR)/crt0.o $(BUILD_DIR)/system.o
 
-$(BUILD_DIR)/wait.o: $(ASM_DIR)/wait.s
-	ca65 -t none --cpu 65C02 $(ASM_DIR)/wait.s -o $(BUILD_DIR)/wait.o
 
-$(BUILD_DIR)/durango.lib: $(BUILD_DIR)/ $(BUILD_DIR)/dlib.o $(BUILD_DIR)/conio.o $(BUILD_DIR)/8x8.o $(BUILD_DIR)/sbc.lib $(BUILD_DIR)/interrupt.o $(BUILD_DIR)/vectors.o $(BUILD_DIR)/wait.o
-	ar65 r $(BUILD_DIR)/durango.lib $(BUILD_DIR)/dlib.o $(BUILD_DIR)/8x8.o $(BUILD_DIR)/conio.o $(BUILD_DIR)/interrupt.o $(BUILD_DIR)/wait.o
-
-$(BUILD_DIR)/sbc.lib: $(BUILD_DIR)/crt0.o
-	cp /usr/share/cc65/lib/supervision.lib $(BUILD_DIR)/sbc.lib && ar65 a $(BUILD_DIR)/sbc.lib $(BUILD_DIR)/crt0.o
-
-$(BUILD_DIR)/:
+$(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 makeziplib: $(BUILD_DIR)/durango.lib
-	zip -r durangoLib.zip LICENSE $(DOCS_DIR)/ $(SAMPLES_DIR)/ $(BUILD_DIR)/durango.lib $(BUILD_DIR)/sbc.lib $(INCLUDE_DIRS)/durango.h $(CFG_DIR)/durango.cfg $(CFG_DIR)/durango16k.cfg $(BUILD_DIR)/vectors.o $(INCLUDE_DIRS)/video.h
+	zip -r durangoLib.zip LICENSE $(DOCS_DIR)/ $(SAMPLES_DIR)/ $(BUILD_DIR)/durango.lib $(INCLUDE_DIRS)/durango.h $(CFG_DIR)/durango16k.cfg
 
 clean:
 	rm -Rf bin/ durangoLib.zip
