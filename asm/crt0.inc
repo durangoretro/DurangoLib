@@ -11,6 +11,7 @@ HEIGHT = $22
 X_COORD = $23
 Y_COORD = $24
 TEMP1 = $25
+TEMP2 = $26
 
 ; RAM VARS ($0200 - $02FF)
 ;--------------------------

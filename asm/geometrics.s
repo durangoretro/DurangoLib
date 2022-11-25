@@ -6,6 +6,7 @@
 .export _drawPixel
 .export _strokeRect
 .export _fillRect
+.export _drawLine
 
 .import incsp3
 .import incsp5
@@ -406,6 +407,163 @@ hl_nowrap:
 	RTS
 .endproc
 
+
+;-----------------------------------------------------------------------
+; DRAW LINE
+;-----------------------------------------------------------------------
+.proc _drawLine:near
+    ; Load x coord
+    LDY #$04
+    LDA (sp), Y
+	STA X_COORD
+    
+    ; Load y coord
+    LDY #$03
+    LDA (sp), Y
+	STA Y_COORD
+    
+    ; Load color			; just transmitted to _drawPixel
+;	LDY #$00
+	LDA (sp)				; CMOS does not need , Y
+	STA COLOUR
+    
+    ; Load y2
+    LDY #$01
+    LDA (sp), Y
+	STA HEIGHT				; actually y2
+
+    ; Load x2
+    LDY #$02
+    LDA (sp), Y
+	STA WIDTH				; actually x2
+    
+; *** input *** placeholder addresses
+x1		= X_COORD			; NW corner x coordinate (<128 in colour, <256 in HIRES)
+y1		= Y_COORD			; NW corner y coordinate (<128 in colour, <256 in HIRES)
+x2		= WIDTH				; _not included_ SE corner x coordinate (<128 in colour, <256 in HIRES) *** reusing variable for convenience
+y2		= HEIGHT			; _not included_ SE corner y coordinate (<128 in colour, <256 in HIRES) *** reusing variable for convenience
+;px_col	= COLOUR			; pixel colour, in II format (17*index), HIRES expects 0 (black) or $FF (white) *** not used here, just passed to PLOT
+
+; *** zeropage usage and local variables *** beware of conflicts with PLOT (TEMP1 is used!)
+sx		= TEMP2				; local variable @ $22
+sy		= sx+1				; @ $23
+dx		= sy+1				; this is ALWAYS positive... @ $24
+dy		= dx+1				; ...but this one is negative OR zero @ $25-26
+error	= dy+2				; colour mode cannot be over 254, but 16-bit arithmetic needed @ $27-28
+err_2	= error+2			; make room for this! @ $29-2A
+
+dxline:
+; compute dx, sx
+	LDX #1					; temporary sx
+	LDA x2
+	SEC
+	SBC x1					; this is NOT abs(x1-x0) yet...
+	BCS set_sx				; if x0>x1...
+		LDX #$FF			; sx=-1, else sx=1
+		EOR #$FF			; ...and compute ABS(x1-x0) from x1-x0
+		INC					; CMOS only, could use ADC #1 as C known to be clear
+set_sx:
+	STX sx
+	STA dx
+; compute dy, sy
+	LDY #1					; temporary sy
+	LDA y2
+	LDX #$FF				; usual final dy sign!
+	CMP y1					; if dy=0...
+	BNE ne_dy
+		INX					; ...MSB is 0 (positive)
+ne_dy:
+	SEC
+	SBC y1					; this is NOT -abs(y1-y0) yet...
+	BCS set_sy				; if y0>y1...
+		LDY #$FF			; sy=-1, else sy=1
+		EOR #$FF			; ...and compute ABS(y1-y0) from y1-y0
+		INC					; CMOS only, could use ADC #1 as C known to be clear
+set_sy:
+	STY sy
+	STA dy
+; dy = -dy
+	SEC
+	LDA #0
+	SBC dy
+	STA dy
+	STX dy+1				; definitive sign, previously computed EEEEEEEK
+; compute error = dx + dy
+	CLC
+	ADC dx
+	STA error				; error=dx+dy
+	TXA						; was dy.h
+	ADC #0					; dx ALWAYS positive
+	STA error+1				; MSB, just in case
+l_loop:
+		LDX x1				; *** remove these if dxplot label is NOT accessible ***
+		LDY y1
+		JSR _drawPixel::dxplot	; *** call primitive with X/Y, assume colours already set *** or use standard procedure, parameters already set
+		LDA x1
+		CMP x2				; if x0==x1...
+		BNE l_cont
+			LDA y1			; ...and y1==y0...
+			CMP y2
+			BEQ l_end		; break
+l_cont:
+		LDA error
+		ASL 				; e2=2*error
+		STA err_2
+		LDA error+1
+		ROL
+		STA err_2+1
+; compute 16-bit signed difference
+		SEC
+		LDA err_2
+		SBC dy				; don't care about result, just look for the sign on MSB
+		LDA err_2+1
+		SBC dy+1
+; if e2<dy, N is set
+		BMI if_x
+then_y:						; *** do this if e2 >= dy ***
+			LDX x1
+			CPX x2
+			BEQ if_x		; if x0==x1 break
+				LDA error
+				CLC
+				ADC dy
+				STA error	; error += dy
+				LDA error+1
+				ADC dy+1
+				STA error+1	; MSB too EEEEEK
+				LDA x1
+				CLC
+				ADC sx
+				STA x1		; x0 += sx
+if_x:
+; compute 16-bit signed difference
+		SEC
+		LDA dx
+		SBC err_2			; don't care about result, just look for the sign on MSB
+		LDA #0				; dx ALWAYS positive
+		SBC err_2+1
+; if dx<e2, N is set -- that means if e2<=dx, N is clear
+		BMI l_loop
+then_x:						; *** do this if e2 <= dx ***
+			LDX y1
+			CPX y2
+			BEQ l_loop		; if y0==y1 break
+		LDA error
+		CLC
+		ADC dx
+		STA error			; error += dx
+		LDA error+1
+		ADC #0				; dx ALWAYS positive
+		STA error+1			; MSB too EEEEEK
+		LDA y1
+		CLC
+		ADC sy
+		STA y1				; y0 += sy
+		BRA l_loop
+l_end:
+    ; Remove args from stack... and return to caller
+    JMP incsp5
+.endproc
 
 ;-----------------------------------------------------------------------
 ; DATA

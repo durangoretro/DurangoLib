@@ -51,6 +51,16 @@ extern void __cdecl__ strokeRect(unsigned char x, unsigned char y, unsigned char
  */
 extern void __cdecl__ fillRect(unsigned char x, unsigned char y, unsigned char width, unsigned char height, unsigned char color);
 
+/**
+ * Draw a Line on Screen
+ * @param x1: Start X Coord in pixels. The x coordinate is from left to Rigth.
+ * @param y1: Start Y Coord in pixels. The Y coordinate is from up to Down.
+ * @param x2: End X Coord.
+ * @param y2: End Y Coord
+ * @param color: color to use.
+ */
+extern void __cdecl__ drawLine(unsigned char x1, unsigned char y1, unsigned char x2, unsigned char y2, unsigned char color);
+
 
 /* COLOURS */
 /**
