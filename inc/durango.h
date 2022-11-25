@@ -16,6 +16,7 @@ typedef unsigned char u8;
 
 /* PROCEDURES */
 extern void __fastcall__ setHiRes(unsigned char);
+extern void __fastcall__ fillScreen(unsigned char);
 
 
 /* COLOURS */
