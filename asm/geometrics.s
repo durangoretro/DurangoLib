@@ -7,8 +7,10 @@
 .export _strokeRect
 .export _fillRect
 .export _drawLine
+.export _drawCircle
 
 .import incsp3
+.import incsp4
 .import incsp5
 .importzp  sp
 
@@ -564,6 +566,224 @@ l_end:
     ; Remove args from stack... and return to caller
     JMP incsp5
 .endproc
+
+
+;-----------------------------------------------------------------------
+; DRAW CIRCLE
+;-----------------------------------------------------------------------
+.proc _drawCircle: near
+	; Load x coord
+    LDY #$03
+    LDA (sp), Y
+	STA X_COORD
+    
+    ; Load y coord
+    LDY #$02
+    LDA (sp), Y
+	STA Y_COORD
+
+	; Load radius
+    LDY #$01
+    LDA (sp), Y
+	STA WIDTH				; reasonable usage
+
+	; Load colour
+;    LDY #$00
+    LDA (sp)				; CMOS doesn't need the , Y
+	STA COLOUR				; actually used by _drawPixel
+
+; *** input ***
+x0		= X_COORD			; center x coordinate (<128 in colour, <256 in HIRES)
+y0		= Y_COORD			; center y coordinate (<128 in colour, <256 in HIRES)
+radius	= WIDTH				; circle radius (<128 in colour, <256 in HIRES)
+px_col	= COLOUR			; pixel colour, in II format (17*index), HIRES expects 0 (black) or $FF (white), actually zpar
+
+; *** zeropage usage and local variables *** beware of conflicts with PLOT (TEMP1 is used!)
+f		= TEMP2				; 16-bit @$22-23
+ddf_x	= f+2				; maybe 8 bit is OK? seems always positive @$24-25
+ddf_y	= ddf_x+2			; starts negative and gets added to f, thus 16-bit @$26-27
+x_coord		= ddf_y+2			; seems 8 bit @$28
+y_coord		= x_coord+1				; 8-bit as well @$29
+
+dxcircle:
+; compute initial f = 1 - radius
+	LDA #1
+	SEC
+	SBC radius
+	STA f					; LSB OK
+	LDA #0
+	SBC #0
+	STA f+1					; sign extention
+; ddF_x = 0
+	STZ ddf_x
+	STZ ddf_x+1
+; compute ddF_y = -2 * radius
+	STZ ddf_y+1				; clear MSB for a while
+	LDA radius
+	ASL						; times two
+	STA ddf_y				; temporary positive LSB
+	ROL ddf_y+1
+	LDA #0
+	SEC
+	SBC ddf_y				; negate
+	STA ddf_y
+	LDA #0
+	SBC ddf_y+1
+	STA ddf_y+1				; surely there's a much faster way, but...
+; reset x & y
+	STZ x_coord
+	LDA radius
+	STA y_coord
+; draw initial dots
+;	LDA radius				; already there!
+	CLC
+	ADC y0
+	TAY
+	LDX x0
+	JSR _drawPixel::dxplot				; plot(x0, y0+radius)
+	LDA y0
+	SEC
+	SBC radius
+	TAY
+	LDX x0
+	JSR _drawPixel::dxplot				; plot(x0, y0-radius)
+	LDY y0
+	LDA x0
+	CLC
+	ADC radius
+	TAX
+	JSR _drawPixel::dxplot				; plot(x0+radius, y0)
+	LDY y0
+	LDA x0
+	SEC
+	SBC radius
+	TAX
+	JSR _drawPixel::dxplot				; plot(x0-radius, y0)
+; main loop while x < y
+loop:
+	LDA x_coord
+	CMP y_coord
+	BCC c_cont
+	JMP c_end				; if x >= y, exit
+c_cont:
+; if f >= 0... means MSB is positive
+		BIT f+1
+		BMI f_neg
+			DEC y_coord
+			LDA ddf_y		; add 2 to ddF_y
+			CLC
+			ADC #2
+			STA ddf_y
+			TAY				; convenient LSB storage
+			LDA ddf_y+1
+			ADC #0
+			STA ddf_y+1
+			TAX				; convenient MSB storage...
+			TYA				; ...for adding ddF_y to f
+			CLC
+			ADC f
+			STA f
+			TXA
+			ADC f+1
+			STA f+1
+f_neg:
+		INC x_coord
+		LDA ddf_x			; add 2 to ddF_x
+		CLC
+		ADC #2
+		STA ddf_x
+		TAY					; again, convenient storage...
+		LDA ddf_x+1
+		ADC #0
+		STA ddf_x+1
+		TAX
+		TYA					; ...for adding ddF_x to f...
+		SEC					; ...plus 1!
+		ADC f
+		STA f
+		TXA
+		ADC f+1
+		STA f+1
+; do 8 plots per iteration
+	LDA x0
+	CLC
+	ADC x_coord
+	TAX
+	LDA y0
+	CLC
+	ADC y_coord
+	TAY
+	JSR _drawPixel::dxplot				; plot(x0+x, y0+y)
+	LDA x0
+	SEC
+	SBC x_coord
+	TAX
+	LDA y0
+	CLC
+	ADC y_coord
+	TAY
+	JSR _drawPixel::dxplot				; plot(x0-x, y0+y)
+	LDA x0
+	CLC
+	ADC x_coord
+	TAX
+	LDA y0
+	SEC
+	SBC y_coord
+	TAY
+	JSR _drawPixel::dxplot				; plot(x0+x, y0-y)
+	LDA x0
+	SEC
+	SBC x_coord
+	TAX
+	LDA y0
+	SEC
+	SBC y_coord
+	TAY
+	JSR _drawPixel::dxplot				; plot(x0-x, y0-y)
+	LDA x0
+	CLC
+	ADC y_coord
+	TAX
+	LDA y0
+	CLC
+	ADC x_coord
+	TAY
+	JSR _drawPixel::dxplot				; plot(x0+y, y0+x)
+	LDA x0
+	SEC
+	SBC y_coord
+	TAX
+	LDA y0
+	CLC
+	ADC x_coord
+	TAY
+	JSR _drawPixel::dxplot				; plot(x0-y, y0+x)
+	LDA x0
+	CLC
+	ADC y_coord
+	TAX
+	LDA y0
+	SEC
+	SBC x_coord
+	TAY
+	JSR _drawPixel::dxplot				; plot(x0+y, y0-x)
+	LDA x0
+	SEC
+	SBC y_coord
+	TAX
+	LDA y0
+	SEC
+	SBC x_coord
+	TAY
+	JSR _drawPixel::dxplot				; plot(x0-y, y0-x)
+	JMP loop
+c_end:
+	RTS
+	; Remove args from stack
+	JMP incsp4
+.endproc
+
 
 ;-----------------------------------------------------------------------
 ; DATA
