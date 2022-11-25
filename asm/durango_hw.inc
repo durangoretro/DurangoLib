@@ -1,6 +1,8 @@
 ; ---------------------------------------------------------------------------
 ; DURANGO HARDWARE CONSTANTS
+; @author: Emilio Lopez Berenguer emilio@emiliollbb.net
 ; ---------------------------------------------------------------------------
+
 ; [HiRes Invert S1 S0    RGB LED NC NC]
 VIDEO_MODE = $DF80
 INT_ENABLE = $DFA0

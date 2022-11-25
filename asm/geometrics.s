@@ -1,3 +1,10 @@
+; ---------------------------------------------------------------------------
+; DURANGO SDK. CC65 SUPPORT
+; Durango Geometric procedures
+; @author: Carlos Santisteban
+; ---------------------------------------------------------------------------
+
+
 .include "durango_hw.inc"
 .include "crt0.inc"
 .PC02

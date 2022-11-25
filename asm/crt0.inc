@@ -1,5 +1,7 @@
 ; ---------------------------------------------------------------------------
+; DURANGO SDK. CC65 SUPPORT
 ; CRT0 CONSTANTS
+; @author: Emilio Lopez Berenguer emilio@emiliollbb.net
 ; ---------------------------------------------------------------------------
 
 ; ZERO PAGE VARS ($00-$2F)

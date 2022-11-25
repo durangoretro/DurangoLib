@@ -1,4 +1,7 @@
 ; ---------------------------------------------------------------------------
+; DURANGO SDK. CC65 SUPPORT
+; Durango Initialization
+; @author: Emilio Lopez Berenguer emilio@emiliollbb.net
 ; crt0.s
 ; ---------------------------------------------------------------------------
 ;
