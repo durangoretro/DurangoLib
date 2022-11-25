@@ -6,7 +6,11 @@
 ;--------------------------
 VMEM_POINTER = $00; $01
 COLOUR = $20
-TEMP1 = $21
+WIDTH = $21
+HEIGHT = $22
+X_COORD = $23
+Y_COORD = $24
+TEMP1 = $25
 
 ; RAM VARS ($0200 - $02FF)
 ;--------------------------
