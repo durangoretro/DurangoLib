@@ -16,7 +16,20 @@ typedef unsigned char u8;
 
 /* PROCEDURES */
 extern void __fastcall__ setHiRes(unsigned char);
+
+/**
+ * Fill the entire Screen of one color
+ * @param color one of the 16 colors to print. Check video.h to see the 16 colors Macros.
+ */
 extern void __fastcall__ fillScreen(unsigned char);
+
+/**
+ * Draw a Pixel on Screen
+ * @param x: X Coord in pixels. The x coordinate is from left to Rigth.
+ * @param y: Y Coord in pixels. The Y coordinate is from up to Down.
+ * @param color: color to use.
+ */
+extern void __cdecl__ drawPixel(unsigned char x, unsigned char y, unsigned char color);
 
 
 /* COLOURS */

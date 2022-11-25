@@ -17,12 +17,6 @@ int main(){
 	drawPixel(1, 1, ORANGE);
 	drawPixel(3, 1, LAVENDER_ROSE);
 	drawPixel(4, 1, RED);
-
-
-	// You can also draw Pixels in paris, which is faster
-    drawPixelPair(0, 2, RED);
-	drawPixelPair(2, 2, GREEN);
-	drawPixelPair(4, 2, BLUE);
     
 	return 0;
 }
