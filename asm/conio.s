@@ -8,7 +8,7 @@
 .export _set_font
 .export _printf
 
-.proc  _conio_init: near
+.proc  conio: near
 ;	INPUT
 ; A <-	char to be printed (1...255)
 ; A <-  0  for input mode
@@ -904,9 +904,6 @@ cio_mbm:
     RTS
 .endproc
 
-
-; A = 0 -> INPUT
-; A > 0 -> OUTPUT
-.proc conio: near
+.proc _conio_init: near
     RTS
 .endproc
