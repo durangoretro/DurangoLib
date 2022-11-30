@@ -2,7 +2,8 @@
 ; DURANGO SDK. CC65 SUPPORT
 ; Durango Initialization
 ; @author: Emilio Lopez Berenguer emilio@emiliollbb.net
-; @author: Carlos J. Santisteban
+; @author: Carlos Santisteban Salinas zuiko21@gmail.com
+; @author: Victor Suárez García zerasul@gmail.com
 ; crt0.s
 ; ---------------------------------------------------------------------------
 ;
@@ -82,8 +83,8 @@ _init:
     BNE loop
     LDA GAMEPAD1
     LDX GAMEPAD2
-    STA GAMEPAD_MODE
-    STX GAMEPAD_MODE+1
+    STA GAMEPAD_MASK
+    STX GAMEPAD_MASK+1
     
     ; Enable Durango interrupts
     LDA #$01
@@ -130,10 +131,10 @@ _irq_int:
     DEX
     BNE loop2
     LDA GAMEPAD1
-    EOR GAMEPAD_MODE
+    EOR GAMEPAD_MASK
     STA GAMEPAD
     LDA GAMEPAD+1
-    EOR GAMEPAD_MODE+1
+    EOR GAMEPAD_MASK+1
     STA GAMEPAD+1
     ; Restore registers and return
     PLX

@@ -1,6 +1,8 @@
 ; ---------------------------------------------------------------------------
 ; DURANGO HARDWARE CONSTANTS
 ; @author: Emilio Lopez Berenguer emilio@emiliollbb.net
+; @author: Carlos Santisteban Salinas zuiko21@gmail.com
+; @author: Victor Suárez García zerasul@gmail.com
 ; ---------------------------------------------------------------------------
 
 ; [HiRes Invert S1 S0    RGB LED NC NC]

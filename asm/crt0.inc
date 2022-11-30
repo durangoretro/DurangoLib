@@ -2,6 +2,8 @@
 ; DURANGO SDK. CC65 SUPPORT
 ; CRT0 CONSTANTS
 ; @author: Emilio Lopez Berenguer emilio@emiliollbb.net
+; @author: Carlos Santisteban Salinas zuiko21@gmail.com
+; @author: Victor Suárez García zerasul@gmail.com
 ; ---------------------------------------------------------------------------
 
 ; ZERO PAGE VARS ($00-$2F)
@@ -22,7 +24,7 @@ NMI_ADDR   = $0202 ; - $0203
 BRK_ADDR   = $0204 ; - $0205
 TICKS = $0206 ; - $0209
 KEY_PRESSED = $020A
-KEYBOARD = $020B ; $020F
-GAMEPAD_MODE = $020F ; - $0210
+KEYBOARD_TYPE = $020F
+GAMEPAD_MASK = $020F ; - $0210
 GAMEPAD = $0211 ; - $0212
 
