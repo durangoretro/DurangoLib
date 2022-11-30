@@ -1,7 +1,9 @@
 ; ---------------------------------------------------------------------------
 ; DURANGO SDK. CC65 SUPPORT
 ; Durango Geometric procedures
-; @author: Carlos Santisteban
+; @author: Emilio Lopez Berenguer emilio@emiliollbb.net
+; @author: Carlos Santisteban Salinas zuiko21@gmail.com
+; @author: Victor Suárez García zerasul@gmail.com
 ; ---------------------------------------------------------------------------
 
 
