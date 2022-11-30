@@ -25,15 +25,15 @@ GAMEPAD_MASK2  = GAMEPAD_MASK1 + 1          ; $11
 GAMEPAD_VALUE1 = GAMEPAD_MASK2 + 1          ; $12
 GAMEPAD_VALUE2 = GAMEPAD_VALUE1 + 1         ; $13
 ; CONIO data structures
-CONIO_CCOL = GAMEPAD_VALUE2 + 1             ; $14
-CONIO_CIOP = CONIO_CCOL + 4                 ; $18
-CONIO_CBYT = CONIO_CIOP + 2                 ; $1A (temp, aka CONIO_CHALF)
-CONIO_SCUR = CONIO_CBYT + 1                 ; $1B
+CONIO_TCOL = GAMEPAD_VALUE2 + 1             ; $14 (aka _ccol)
+CONIO_POSI = CONIO_TCOL + 4                 ; $18 (aka _ciop)
+CONIO_TEMP = CONIO_POSI + 2                 ; $1A (temp, aka _cbyt, _chalf)
+CONIO_SCUR = CONIO_TEMP + 1                 ; $1B
 ZP_SPACE = CONIO_SCUR + 1                   ; $1C...$2B, unused
 ; reserved space for interrupts only
 INTERRUPT_POINTER = $2C                     ; $2C
-INTERRUPT_SPARE = INTERRUPT_POINTER + 2     ; $2E, may be used as pointer
-INTERRUPT_DATA = INTERRUPT_SPARE + 1        ; $2F
+INTERRUPT_SPARE   = INTERRUPT_POINTER + 2   ; $2E, may be used as pointer
+INTERRUPT_DATA    = INTERRUPT_SPARE + 1     ; $2F
 
 ; RAM VARS ($0200 - $02FF)
 ;--------------------------
@@ -49,8 +49,8 @@ KEYBOARD_SCAN = KEYBOARD_CONTROL + 1        ; $020D
 KEYBOARD_REPEAT	= KEYBOARD_SCAN + 1         ; $020E	
 KEYBOARD_TYPE = KEY_PRESSED + 4             ; $020F
 ; CONIO global variables
-CONIO_CBIN = KEYBOARD_TYPE + 1              ; $0210
-CONIO_MASK = CONIO_CBIN + 1                 ; $0211
-CONIO_FNT  = CONIO_MASK + 1                 ; $0212
-CONIO_IO9  = CONIO_FNT + 2                  ; $0214 (1 byte)
+CONIO_MODE = KEYBOARD_TYPE + 1              ; $0210 (aka _cbin)
+CONIO_MASK = CONIO_MODE + 1                 ; $0211
+CONIO_FONT = CONIO_MASK + 1                 ; $0212
+CONIO_LAST = CONIO_FONT + 2                 ; $0214 (1 byte, aka _io9)
 ; $0215 - $02FF unused
