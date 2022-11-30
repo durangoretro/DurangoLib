@@ -52,5 +52,6 @@ KEYBOARD_TYPE = KEY_PRESSED + 4             ; $020F
 CONIO_MODE = KEYBOARD_TYPE + 1              ; $0210 (aka _cbin)
 CONIO_MASK = CONIO_MODE + 1                 ; $0211
 CONIO_FONT = CONIO_MASK + 1                 ; $0212
-CONIO_LAST = CONIO_FONT + 2                 ; $0214 (1 byte, aka _io9)
-; $0215 - $02FF unused
+CONIO_LAST = CONIO_FONT + 2                 ; $0214 (aka _io9)
+CONIO_KBDPAD = CONIO_LAST + 1               ; $0215 (1 byte, aka _knes)
+; $0216 - $02FF unused
