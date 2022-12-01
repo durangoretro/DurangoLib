@@ -8,7 +8,7 @@
 
 ; CONSTANTS
 ;-------------------------
-RATE = 50
+RATE = 25
 DELAY = 175
 
 ; ZERO PAGE VARS ($00-$2F)
