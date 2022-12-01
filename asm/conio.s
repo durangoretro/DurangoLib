@@ -313,6 +313,7 @@ do_lf:
 cn_hmok:
 ; must check for possible scrolling!!! simply check sign ;-) ...or compare against dynamic limit
 	BPL cn_ok               ; was LDA CONIO_POSI+1;CMP fw_vtop;BNE cn_ok
+; *** *** TO DO *** *** should not scroll wight now, but wait for next char to be printed
 ; ** scroll routine **
 ; rows are 256 bytes apart in hires mode, but 512 in colour mode
 	LDY #0					; LSB *must* be zero, anyway, as is SCREEN_3
@@ -872,8 +873,8 @@ cio_mbm:
 
 .proc _set_font: near
     ; Font pointer
-    STA DATA_POINTER
-    STX DATA_POINTER+1
+    STA CONIO_FONT
+    STX CONIO_FONT+1
       
     RTS
 .endproc
@@ -905,5 +906,18 @@ cio_mbm:
 .endproc
 
 .proc _conio_init: near
-    RTS
+    STZ CONIO_MODE
+    STZ CONIO_MASK
+    STZ CONIO_LAST
+    LDY #<DEFAULT_FONT  ; *** to be set somewhere ***
+    LDX #>DEFAULT_FONT
+    STY CONIO_FONT
+    STZ CONIO_FONT+1
+    LDA #$87            ; default colours, yellow on blue
+    STA CONIO_TCOL+1    ; set PI index
+;   LDA #$80            ; bit 7 high = cursor enabled
+    STA CONIO_SCUR
+    LDA #12             ; form feed = clear screen and initialise stuff
+    JMP conio
+;   RTS
 .endproc
