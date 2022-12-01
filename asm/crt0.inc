@@ -6,6 +6,11 @@
 ; @author: Victor Suárez García zerasul@gmail.com
 ; ---------------------------------------------------------------------------
 
+; CONSTANTS
+;-------------------------
+RATE = 50
+DELAY = 175
+
 ; ZERO PAGE VARS ($00-$2F)
 ;--------------------------
 VMEM_POINTER = $00                          ; $00

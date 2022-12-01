@@ -90,8 +90,8 @@ _init:
     BPL loop
     LDA GAMEPAD1            ; check base values
     LDX GAMEPAD2
-    STA GAMEPAD_MASK
-    STX GAMEPAD_MASK+1
+    STA GAMEPAD_MASK1
+    STX GAMEPAD_MASK2
     
     ; Select keyboard driver EEEEEEEK
 	LDX #0					; default is PASK
@@ -277,7 +277,7 @@ col_bit:
 k_mask:
 	.byte	%11011111, %01111111, %11111111, %11111111, %11111111
 ; * filling after tables inside gap *
-	.res	kb_s_map-*, 0
+	.res	14, 0
 kb_s_map:
 ; SHIFTed keys (d6=1)
 	.byte	$1B, "QA", 8, 'P', 0, $D, 3		; column 1, note SHIFT disabled (scan = $48...$4F)
