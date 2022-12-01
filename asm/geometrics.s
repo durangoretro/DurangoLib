@@ -213,7 +213,7 @@ col	= COLOUR				; pixel colour, in II format (17*index), HIRES expects 0 (black)
 cio_pt	= VMEM_POINTER		; screen pointer
 
 ; *** other variables (not necessarily in zero page) ***
-exc		= TEMP1				; flag for incomplete bytes at each side (could be elshewhere) @ $21
+exc		= ZP_SPACE				; flag for incomplete bytes at each side (could be elshewhere) @ $21
 tmp		= exc+1				; temporary use (could be elsewhere)
 lines	= tmp+1				; raster counter (could be elsewhere)
 bytes	= lines+1			; drawn line width (could be elsewhere)
@@ -456,7 +456,7 @@ y2		= HEIGHT			; _not included_ SE corner y coordinate (<128 in colour, <256 in 
 ;px_col	= COLOUR			; pixel colour, in II format (17*index), HIRES expects 0 (black) or $FF (white) *** not used here, just passed to PLOT
 
 ; *** zeropage usage and local variables *** beware of conflicts with PLOT (TEMP1 is used!)
-sx		= TEMP2				; local variable @ $22
+sx		= ZP_SPACE				; local variable @ $22
 sy		= sx+1				; @ $23
 dx		= sy+1				; this is ALWAYS positive... @ $24
 dy		= dx+1				; ...but this one is negative OR zero @ $25-26
@@ -608,7 +608,7 @@ radius	= WIDTH				; circle radius (<128 in colour, <256 in HIRES)
 px_col	= COLOUR			; pixel colour, in II format (17*index), HIRES expects 0 (black) or $FF (white), actually zpar
 
 ; *** zeropage usage and local variables *** beware of conflicts with PLOT (TEMP1 is used!)
-f		= TEMP2				; 16-bit @$22-23
+f		= ZP_SPACE				; 16-bit @$22-23
 ddf_x	= f+2				; maybe 8 bit is OK? seems always positive @$24-25
 ddf_y	= ddf_x+2			; starts negative and gets added to f, thus 16-bit @$26-27
 x_coord		= ddf_y+2			; seems 8 bit @$28
