@@ -89,6 +89,8 @@ extern void __fastcall__ printf(char* text);
  */
 extern void __fastcall__ set_font(void* font);
 
+extern void __fastcall__ consoleLogHex(char);
+
 
 /* COLOURS */
 /**

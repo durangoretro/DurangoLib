@@ -8,29 +8,15 @@
 .include "crt0.inc"
 .PC02
 
-.importzp  sp
+.export _consoleLogHex
 
-.export _setHiRes
-.export _getChar
+VSP_HEX = $F0
 
-.proc _setHiRes: near
-	CMP #0
-	BNE hires
-	LDA VIDEO_MODE
-	AND #%01111111
-	STA VIDEO_MODE
-	BRA end
-	hires:
-	LDA VIDEO_MODE
-	ORA #%10000000
-	STA VIDEO_MODE
-	end:
-	RTS
-.endproc
-
-.proc _getChar: near
-	read:
-	LDA KEY_PRESSED
-	BEQ read
-	rts
+.proc  _consoleLogHex: near
+    ; Set virtual serial port in hex mode
+    LDX #VSP_HEX
+	STX VSP_CONFIG
+    ; Send value to virtual serial port
+    STA VSP
+    RTS
 .endproc

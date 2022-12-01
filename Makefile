@@ -16,9 +16,11 @@ $(BUILD_DIR)/system.o: $(BUILD_DIR) $(ASM_DIR)/system.s
 	ca65 -t none --cpu 65C02 $(ASM_DIR)/system.s -o $(BUILD_DIR)/system.o
 $(BUILD_DIR)/geometrics.o: $(BUILD_DIR) $(ASM_DIR)/geometrics.s
 	ca65 -t none --cpu 65C02 $(ASM_DIR)/geometrics.s -o $(BUILD_DIR)/geometrics.o
+$(BUILD_DIR)/debug.o: $(BUILD_DIR) $(ASM_DIR)/debug.s
+	ca65 -t none --cpu 65C02 $(ASM_DIR)/debug.s -o $(BUILD_DIR)/debug.o
 
-$(BUILD_DIR)/durango.lib: $(BUILD_DIR) $(BUILD_DIR)/crt0.o $(BUILD_DIR)/system.o $(BUILD_DIR)/geometrics.o
-	cp /usr/share/cc65/lib/supervision.lib $(BUILD_DIR)/durango.lib && ar65 a $(BUILD_DIR)/durango.lib $(BUILD_DIR)/crt0.o $(BUILD_DIR)/system.o $(BUILD_DIR)/geometrics.o
+$(BUILD_DIR)/durango.lib: $(BUILD_DIR) $(BUILD_DIR)/crt0.o $(BUILD_DIR)/system.o $(BUILD_DIR)/geometrics.o $(BUILD_DIR)/debug.o
+	cp /usr/share/cc65/lib/supervision.lib $(BUILD_DIR)/durango.lib && ar65 a $(BUILD_DIR)/durango.lib $(BUILD_DIR)/crt0.o $(BUILD_DIR)/system.o $(BUILD_DIR)/geometrics.o $(BUILD_DIR)/debug.o
 
 
 $(BUILD_DIR):
