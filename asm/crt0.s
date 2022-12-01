@@ -81,7 +81,7 @@ _init:
     BPL cl_loop
     
     ; Init gamepads
-    STA GAMEPAD1                ; latch pad values
+    STA GAMEPAD1            ; latch pad values
     LDX #7
     loop:
     STA GAMEPAD2                ; send clock pulses
@@ -92,6 +92,17 @@ _init:
     LDX GAMEPAD2
     STA GAMEPAD_MASK
     STX GAMEPAD_MASK+1
+    
+    ; Select keyboard driver EEEEEEEK
+	LDX #0					; default is PASK
+	LDA #32					; column 6
+	STA MATRIX_KEYBOARD		; select it
+	LDA MATRIX_KEYBOARD		; and read rows
+	CMP #$58				; is it a 5x8 matrix?
+	BNE not_5x8
+		LDX #2				; set as default keyboard
+not_5x8:
+	STX KEYBOARD_TYPE		; set selected type
     
     ; Enable Durango interrupts
     CLI
@@ -111,7 +122,7 @@ _stop:
     NOP
     JMP _stop       ; universal code
 
-
+; ***************** ISR *****************
 ; Maskable interrupt (IRQ) service routine
 _irq_int:  
     ; Save registres and filter BRK
