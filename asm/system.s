@@ -32,5 +32,6 @@
 	read:
 	LDA KEY_PRESSED
 	BEQ read
+	STZ KEY_PRESSED
 	rts
 .endproc
