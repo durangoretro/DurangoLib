@@ -166,6 +166,7 @@ _nmi_int:
 ; *** keyboard drivers ***
     kbd_isr:
 	LDX KEYBOARD_TYPE
+    .byte $cb               ; WAI, check X value, must be either 0 or 2!
 	JMP (kbd_drv, X)		; CMOS only
 
 ; *** drivers pointer list ***
