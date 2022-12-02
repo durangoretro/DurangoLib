@@ -91,7 +91,17 @@ extern void __fastcall__ set_font(void* font);
 
 extern char __fastcall__ getChar(void);
 
+
+
+// Debug procedures
 extern void __fastcall__ consoleLogHex(char);
+extern void __fastcall__ consoleLogWord(short);
+extern void __fastcall__ consoleLogBinary(char);
+extern void __fastcall__ consoleLogDecimal(char);
+extern void __fastcall__ consoleLogChar(char);
+extern void __fastcall__ consoleLogStr(char *str);
+extern void __fastcall__ startStopwatch(void);
+extern void __fastcall__ stopStopwatch(void);
 
 
 /* COLOURS */
