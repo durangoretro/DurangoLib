@@ -17,7 +17,7 @@
 
 .export _conio_init
 .export _set_font
-.export _printf
+.export _printstr
 
 .proc  conio: near
 ;	INPUT
@@ -889,9 +889,6 @@ cio_mbm:
     RTS
 .endproc
 
-.proc  _printf: near
-    RTS
-.endproc
 
 ; Print constant string
 .proc _printstr: near
@@ -919,10 +916,10 @@ cio_mbm:
     STZ CONIO_MODE
     STZ CONIO_MASK
     STZ CONIO_LAST
-    LDY #<DEFAULT_FONT  ; *** to be set somewhere ***
-    LDX #>DEFAULT_FONT
-    STY CONIO_FONT
-    STZ CONIO_FONT+1
+    ;LDY #<DEFAULT_FONT  ; *** to be set somewhere ***
+    ;LDX #>DEFAULT_FONT
+    ;STY CONIO_FONT
+    ;STZ CONIO_FONT+1
     LDA #$87            ; default colours, yellow on blue
     STA CONIO_TCOL+1    ; set PI index
 ;   LDA #$80            ; bit 7 high = cursor enabled

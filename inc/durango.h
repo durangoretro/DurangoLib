@@ -81,7 +81,7 @@ extern void __fastcall__ conio_init(void);
  * Print string
  * @param text null terminated char sequence.
  */
-extern void __fastcall__ printf(char* text);
+extern void __fastcall__ printstr(char* text);
 
 /**
  * Set up font used in conio. Should be called before any conio operation.
