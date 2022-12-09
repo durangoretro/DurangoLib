@@ -280,7 +280,8 @@ cl_end:
 	BPL do_cle
 		JSR draw_cur		; ...must draw new one
 do_cle:
-	_DR_OK					; C known to be set, though
+	CLC
+	RTS					; C known to be set, though
 
 cn_newl:
 ; CR, but will do LF afterwards by setting Y appropriately
@@ -493,8 +494,6 @@ cio_ff:
 ; standard CLS, reset cursor and clear screen
 	JSR cio_home			; reset cursor and load appropriate address
 ; recompute MSB in A according to hardware NO MORE
-	STA #$60                ; was fw_vbot				; store new variable
-	STA CONIO_POSI+1		; must correct this one too
 	STY VMEM_POINTER		; set pointer (LSB=0)...
 	STA VMEM_POINTER+1
 ; ...and clear whole screen, will return to caller
@@ -664,7 +663,7 @@ set_col:
 	ORA CONIO_TEMP			; all paper...			(PP)
 	STA CONIO_TCOL			; ...at [0]				PP PI IP II
 md_std:
-	_STZA CONIO_MODE		; back to standard mode
+	STZ CONIO_MODE		; back to standard mode
 	RTS
 
 cn_sety:					; 6= Y to be set, advance mode to 8
