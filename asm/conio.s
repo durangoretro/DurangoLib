@@ -1,5 +1,16 @@
-.include "durango_constants.inc"
+; ---------------------------------------------------------------------------
+; DURANGO SDK. CC65 SUPPORT
+; Durango Geometric procedures
+; @author: Emilio Lopez Berenguer emilio@emiliollbb.net
+; @author: Carlos Santisteban Salinas zuiko21@gmail.com
+; @author: Victor Suárez García zerasul@gmail.com
+; ---------------------------------------------------------------------------
+
+
+.include "durango_hw.inc"
+.include "crt0.inc"
 .PC02
+
 
 .importzp  sp
 .import incsp4
