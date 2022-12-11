@@ -896,13 +896,13 @@ cio_mbm:
 ; Print constant string
 .proc _printstr: near
     ; Get data pointer from procedure args
-    STA DATA_POINTER
-    STX DATA_POINTER+1
+    STA RESOURCE_POINTER
+    STX RESOURCE_POINTER+1
     
     ; Iterator
     LDY #$00
     loop:
-    LDA (DATA_POINTER),Y
+    LDA (RESOURCE_POINTER),Y
     BEQ end
     ; Current char in A
     PHY
