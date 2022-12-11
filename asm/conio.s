@@ -922,7 +922,7 @@ cio_mbm:
     LDY #<DEFAULT_FONT  ; *** to be set somewhere ***
     LDX #>DEFAULT_FONT
     STY CONIO_FONT
-    STZ CONIO_FONT+1
+    STX CONIO_FONT+1
     LDA #$87            ; default colours, yellow on blue
     STA CONIO_TCOL+1    ; set PI index
 ;   LDA #$80            ; bit 7 high = cursor enabled
