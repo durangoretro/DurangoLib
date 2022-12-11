@@ -75,7 +75,7 @@ extern void __cdecl__ drawCircle(unsigned char x, unsigned char y, unsigned char
  * Init conio lib. Should be called once before any conio operation, and
  * after any change in video mode register.
  */
-extern void __fastcall__ conio_init(void);
+extern void __fastcall__ conioInit(void);
 
 /**
  * Print string
@@ -87,7 +87,7 @@ extern void __fastcall__ printstr(char* text);
  * Set up font used in conio. Should be called before any conio operation.
  * @param font pointer to font.
  */
-extern void __fastcall__ set_font(void* font);
+extern void __fastcall__ setFont(void* font);
 
 extern char __fastcall__ getChar(void);
 

@@ -27,6 +27,8 @@ VSP_DUMP = $FD
 VSP_STACK = $FE
 VSP_STAT = $FF
 
+.segment "LIB"
+
 .proc  _consoleLogHex: near
     ; Set virtual serial port in hex mode
     LDX #VSP_HEX

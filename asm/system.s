@@ -13,6 +13,8 @@
 .export _setHiRes
 .export _getChar
 
+.segment "LIB"
+
 .proc _setHiRes: near
 	CMP #0
 	BNE hires

@@ -1,6 +1,6 @@
 ; ---------------------------------------------------------------------------
 ; DURANGO SDK. CC65 SUPPORT
-; Durango Geometric procedures
+; Durango conio lib
 ; @author: Emilio Lopez Berenguer emilio@emiliollbb.net
 ; @author: Carlos Santisteban Salinas zuiko21@gmail.com
 ; @author: Victor Suárez García zerasul@gmail.com
@@ -14,10 +14,13 @@
 
 .importzp  sp
 .import incsp4
+.import DEFAULT_FONT
 
-.export _conio_init
-.export _set_font
+.export _conioInit
+.export _setFont
 .export _printstr
+
+.segment "LIB"
 
 .proc  conio: near
 ;	INPUT
@@ -881,7 +884,7 @@ cio_mbm:
 	.word	cn_atyx			; 8= X to be set and return to normal
 .endproc
 
-.proc _set_font: near
+.proc _setFont: near
     ; Font pointer
     STA CONIO_FONT
     STX CONIO_FONT+1
@@ -912,14 +915,14 @@ cio_mbm:
     RTS
 .endproc
 
-.proc _conio_init: near
+.proc _conioInit: near
     STZ CONIO_MODE
     STZ CONIO_MASK
     STZ CONIO_LAST
-    ;LDY #<DEFAULT_FONT  ; *** to be set somewhere ***
-    ;LDX #>DEFAULT_FONT
-    ;STY CONIO_FONT
-    ;STZ CONIO_FONT+1
+    LDY #<DEFAULT_FONT  ; *** to be set somewhere ***
+    LDX #>DEFAULT_FONT
+    STY CONIO_FONT
+    STZ CONIO_FONT+1
     LDA #$87            ; default colours, yellow on blue
     STA CONIO_TCOL+1    ; set PI index
 ;   LDA #$80            ; bit 7 high = cursor enabled
