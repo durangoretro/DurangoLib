@@ -86,7 +86,6 @@ BM_PPR = 4
 BM_ATY = 6
 BM_ATX = 8
 
-	TYA						; is going to be needed here anyway
 	LDX CONIO_MODE			; check whether in binary/multibyte mode
 	BEQ cio_cmd				; if not, check whether command (including INPUT) or glyph
 		CPX #BM_DLE			; just receiving what has to be printed?
