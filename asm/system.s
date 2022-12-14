@@ -20,6 +20,7 @@
 	BNE hires
 	LDA VIDEO_MODE
 	AND #%01111111
+	ORA #%00001000	; doesn't actually know the status of the RGB bit, won't harm anyway
 	STA VIDEO_MODE
 	BRA end
 	hires:
