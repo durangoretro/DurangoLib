@@ -98,7 +98,7 @@ _init:
 	LDA #32					; column 6
 	STA MATRIX_KEYBOARD		; select it
 	LDA MATRIX_KEYBOARD		; and read rows
-	CMP #$58				; is it a 5x8 matrix?
+	CMP #$2C				; is it a 5x8 matrix? EEEEEEEEEEEEEEK
 	BNE not_5x8
 		LDX #2				; set as default keyboard
 not_5x8:
