@@ -5,6 +5,7 @@ CFG_DIR=cfg
 ASM_DIR=asm
 DOCS_DIR=docs
 SAMPLES_DIR=examples
+RESCOMP?=../rescomp.jar
 
 COMPILE_OPTS = -c -I $(INCLUDE_DIRS) -Oir --cpu 65c02
 

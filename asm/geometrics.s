@@ -1,34 +1,21 @@
-; ---------------------------------------------------------------------------
-; DURANGO SDK. CC65 SUPPORT
-; Durango Geometric procedures
-; @author: Emilio Lopez Berenguer emilio@emiliollbb.net
-; @author: Carlos Santisteban Salinas zuiko21@gmail.com
-; @author: Victor Suárez García zerasul@gmail.com
-; ---------------------------------------------------------------------------
-
-
-.include "durango_hw.inc"
-.include "crt0.inc"
+.include "durango_constants.inc"
 .PC02
 
-.export _fillScreen
-.export _drawPixel
-.export _strokeRect
-.export _fillRect
-.export _drawLine
-.export _drawCircle
-
+;https://github.com/cc65/cc65/tree/master/libsrc/runtime
+.importzp  sp
 .import incsp3
 .import incsp4
 .import incsp5
-.importzp  sp
 
-.segment "LIB"
+.export _drawFullScreen
+.export _drawPixel
+.export _drawRect
+.export _drawFillRect
+.export _drawLine
+.export _drawCircle
 
-;-----------------------------------------------------------------------
-; FILL SCREEN
-;-----------------------------------------------------------------------
-.proc _fillScreen: near
+
+.proc _drawFullScreen: near
     LDX #>SCREEN_3
     STX VMEM_POINTER+1
     LDY #<SCREEN_3
@@ -42,9 +29,7 @@
     RTS
 .endproc
 
-;-----------------------------------------------------------------------
-; DRAW PIXEL
-;-----------------------------------------------------------------------
+
 .proc _drawPixel: near
     ; Load x coord
     LDY #$02
@@ -137,10 +122,7 @@ evpix:
 	RTS
 .endproc
 
-;-----------------------------------------------------------------------
-; STROKE RECT
-;-----------------------------------------------------------------------
-.proc _strokeRect:near
+.proc _drawRect:near
     ; Load x coord
     LDY #$04
     LDA (sp), Y
@@ -167,11 +149,7 @@ evpix:
     RTS
 .endproc
 
-
-;-----------------------------------------------------------------------
-; FILL RECT
-;-----------------------------------------------------------------------
-.proc _fillRect:near
+.proc _drawFillRect:near
     ; Load x coord
     LDY #$04
     LDA (sp), Y
@@ -215,7 +193,7 @@ col	= COLOUR				; pixel colour, in II format (17*index), HIRES expects 0 (black)
 cio_pt	= VMEM_POINTER		; screen pointer
 
 ; *** other variables (not necessarily in zero page) ***
-exc		= ZP_SPACE				; flag for incomplete bytes at each side (could be elshewhere) @ $21
+exc		= TEMP1				; flag for incomplete bytes at each side (could be elshewhere) @ $21
 tmp		= exc+1				; temporary use (could be elsewhere)
 lines	= tmp+1				; raster counter (could be elsewhere)
 bytes	= lines+1			; drawn line width (could be elsewhere)
@@ -420,10 +398,6 @@ hl_nowrap:
 	RTS
 .endproc
 
-
-;-----------------------------------------------------------------------
-; DRAW LINE
-;-----------------------------------------------------------------------
 .proc _drawLine:near
     ; Load x coord
     LDY #$04
@@ -458,7 +432,7 @@ y2		= HEIGHT			; _not included_ SE corner y coordinate (<128 in colour, <256 in 
 ;px_col	= COLOUR			; pixel colour, in II format (17*index), HIRES expects 0 (black) or $FF (white) *** not used here, just passed to PLOT
 
 ; *** zeropage usage and local variables *** beware of conflicts with PLOT (TEMP1 is used!)
-sx		= ZP_SPACE				; local variable @ $22
+sx		= TEMP2				; local variable @ $22
 sy		= sx+1				; @ $23
 dx		= sy+1				; this is ALWAYS positive... @ $24
 dy		= dx+1				; ...but this one is negative OR zero @ $25-26
@@ -579,9 +553,6 @@ l_end:
 .endproc
 
 
-;-----------------------------------------------------------------------
-; DRAW CIRCLE
-;-----------------------------------------------------------------------
 .proc _drawCircle: near
 	; Load x coord
     LDY #$03
@@ -610,7 +581,7 @@ radius	= WIDTH				; circle radius (<128 in colour, <256 in HIRES)
 px_col	= COLOUR			; pixel colour, in II format (17*index), HIRES expects 0 (black) or $FF (white), actually zpar
 
 ; *** zeropage usage and local variables *** beware of conflicts with PLOT (TEMP1 is used!)
-f		= ZP_SPACE				; 16-bit @$22-23
+f		= TEMP2				; 16-bit @$22-23
 ddf_x	= f+2				; maybe 8 bit is OK? seems always positive @$24-25
 ddf_y	= ddf_x+2			; starts negative and gets added to f, thus 16-bit @$26-27
 x_coord		= ddf_y+2			; seems 8 bit @$28
@@ -795,14 +766,11 @@ c_end:
 	JMP incsp4
 .endproc
 
-
-;-----------------------------------------------------------------------
-; DATA
-;-----------------------------------------------------------------------
 ; *** data ***
 ; _drawPixel
 pixtab:
 	.byt	128, 64, 32, 16, 8, 4, 2, 1		; bit patterns from offset
+
 ; _drawFillRect
 e_mask:
 	.byt	0, %10000000, %11000000, %11100000, %11110000, %11111000, %11111100, %11111110	; [0] never used
