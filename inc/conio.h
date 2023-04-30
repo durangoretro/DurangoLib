@@ -1,3 +1,5 @@
+#ifndef CONIO_H
+#define CONIO_H
 
 /**
  * Init conio lib. Should be called once before any conio operation, and
@@ -17,4 +19,4 @@ extern void __fastcall__ printf(char* text);
  */
 extern void __fastcall__ set_font(void* font);
 
-
+#endif

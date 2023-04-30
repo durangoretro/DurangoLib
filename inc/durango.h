@@ -10,6 +10,9 @@ https://opensource.org/licenses/MIT.
 #ifndef _H_DURANGO
 #define _H_DURANGO
 
+// comment this define to disable PSV integration
+#define PSV
+
 //Main functions
 #include "qgraph.h"
 #include "glyph.h"
@@ -23,9 +26,13 @@ https://opensource.org/licenses/MIT.
 #include "conio.h"
 #include "default_font.h"
 
+// if the define of PSV is disabled the PSV functions is not included
+#ifdef PSV
+
 //Virtual Serial Port (PSV) Functions 
 #include "psv.h"
 
+#endif
 
 #endif
 
