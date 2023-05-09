@@ -14,7 +14,7 @@ https://opensource.org/licenses/MIT.
 #define PSV
 
 //Main functions
-#include "qgraph.h"
+//#include "qgraph.h"
 #include "glyph.h"
 #include "sprites.h"
 #include "geometrics.h"

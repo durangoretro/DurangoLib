@@ -2,7 +2,8 @@ ASM_DIR=asm
 RES_DIR=res
 BUILD_DIR=bin
 INC_DIR=inc
-RESCOMP ?= ../rescomp/target/rescomp.jar
+DDK?=/durango
+RESCOMP ?= $(DDK)/rescomp/rescomp.jar
 
 all: $(BUILD_DIR)/durango.lib $(BUILD_DIR)/system.lib $(INC_DIR)/font.h $(BUILD_DIR)/qgraph.lib $(BUILD_DIR)/psv.lib $(BUILD_DIR)/sprites.lib $(BUILD_DIR)/geometrics.lib $(BUILD_DIR)/conio.lib $(BUILD_DIR)/glyph.lib
 
