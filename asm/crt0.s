@@ -190,8 +190,9 @@ _irq_int:
     ; Save registres and filter BRK
     PHA
     PHX
+    PHY
     TSX
-    LDA $103,X
+    LDA $104,X
     AND #$10
     BNE _stop
     ; Increment interrupt counter
@@ -218,12 +219,20 @@ _irq_int:
     STA GAMEPAD_VALUE2
     
     ; Read keyboard
-    LDA #1
+    LDX #4
+    LDA #%00010000
+    keyboard_loop:
     STA KEYBOARD
+    PHA
     LDA KEYBOARD
-    STA KEYBOARD_CACHE
+    STA KEYBOARD_CACHE,X
+    PLA
+    LSR
+    DEX
+    BPL keyboard_loop
     
     ; Restore registers and return
+    PLY
     PLX
     PLA
     RTI 

@@ -7,6 +7,7 @@
 .export _consoleLogBinary
 .export _consoleLogDecimal
 .export _consoleLogInt
+.export _consoleLogSignedChar
 .export _consoleLogHex16
 .export _consoleLogChar
 .export _consoleLogStr
@@ -56,11 +57,20 @@
 
 .proc  _consoleLogInt: near
     ; Set virtual serial port in hex mode
-    LDY #VSP_INT
+    LDY #VSP_INT16
 	STY VSP_CONFIG
     ; Send value to virtual serial port
     STA VSP
     STX VSP
+    RTS
+.endproc
+
+.proc  _consoleLogSignedChar: near
+    ; Set virtual serial port in hex mode
+    LDY #VSP_INT8
+	STY VSP_CONFIG
+    ; Send value to virtual serial port
+    STA VSP
     RTS
 .endproc
 

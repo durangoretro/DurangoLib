@@ -1,11 +1,35 @@
+/* Copyright 2023 Durango Computer Team
+
+Use of this source code is governed by an MIT-style
+license that can be found in the LICENSE file or at
+https://opensource.org/licenses/MIT.
+*/
+
+/** @file system.h System Calls Header File **/
 #ifndef SYSTEM_H
 #define SYSTEM_H
 
 /* System procedures */
+/**
+ * Set High Res Mode
+*/
 extern void __fastcall__ setHiRes(unsigned char);
+/**
+ * Wait until next VSync Interruption
+*/
 extern void __fastcall__ waitVSync(void);
+/**
+ * Wait until the Start Button (or enter button) is pressed.
+*/
 extern void __fastcall__ waitStart(void);
-extern void __fastcall__ waitFrames(unsigned char);
+/**
+ * Wait a number of frames (a number of VSync interruptions).
+ * @param frames the number of frames to wait.
+*/
+extern void __fastcall__ waitFrames(byte);
+/**
+ * Read a Gamepad and returns the buttons pressed
+*/
 extern unsigned char __fastcall__ readGamepad(unsigned char);
 extern unsigned char __fastcall__ readKeyboard(unsigned char);
 extern void __fastcall__ halt(void);

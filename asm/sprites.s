@@ -3,6 +3,7 @@
 
 .importzp sp
 .import incsp4
+.import coords2mem
 
 .export _load_background
 .export _clrscr
@@ -98,11 +99,10 @@
 	RTS
 .endproc
 
-.proc render_sprite: near
-    loop2:
-    LDY WIDTH
-    DEY
-    loop:
+.proc render_sprite_pixel_pair: near
+    LDA X2_COORD
+    BMI end_transp
+    ; Column in Y
     LDA (RESOURCE_POINTER),Y
     TAX
     ; Check if transparency
@@ -125,8 +125,29 @@
     STA (VMEM_POINTER),Y
     ; end else
     end_transp:
+    RTS
+.endproc
+
+.proc render_sprite_row: near
+    loop2:
+    LDY WIDTH
+    DEY
+    TYA
+    ASL
+    ADC X_COORD
+    STA X2_COORD
+    loop:
+    JSR render_sprite_pixel_pair
+    DEC X2_COORD
+    DEC X2_COORD
     DEY
     BPL loop
+    RTS
+.endproc
+
+.proc render_sprite: near
+    loop2:
+    JSR render_sprite_row
     CLC
     LDA VMEM_POINTER
     ADC #$40
@@ -153,14 +174,22 @@
     STA DATA_POINTER
     STX DATA_POINTER+1
     
-    ; Video pointer
-    LDY #2
+    LDY #0
     LDA (DATA_POINTER),Y
-    STA VMEM_POINTER
-    STA BACKGROUND_POINTER
+    STA X_COORD
     INY
     LDA (DATA_POINTER),Y
-    STA VMEM_POINTER+1
+    STA Y_COORD
+    
+    ; Video pointer
+    JSR coords2mem
+    LDY #2
+    LDA VMEM_POINTER
+    STA (DATA_POINTER),Y
+    STA BACKGROUND_POINTER
+    INY
+    LDA VMEM_POINTER+1
+    STA (DATA_POINTER),Y    
     AND #$df
     STA BACKGROUND_POINTER+1
     
@@ -209,11 +238,28 @@
     LDA (DATA_POINTER),Y
     STA HEIGHT
     
-    ; Update x coord
+    ; Update x,y coord
+    LDY #1
+    LDA (DATA_POINTER),Y
+    STA Y_COORD
     LDA (DATA_POINTER)
     INA
     INA
     STA (DATA_POINTER)
+    STA X_COORD
+    BNE nonzero
+    
+    ; Recalculate vmem position on zero
+    JSR coords2mem
+    LDY #2
+    LDA VMEM_POINTER
+    STA (DATA_POINTER),Y
+    INY
+    LDA VMEM_POINTER+1
+    STA (DATA_POINTER),Y
+    BRA skip3
+    nonzero:
+    
     ; Update vmem position
     LDY #2
     LDA (DATA_POINTER),Y
@@ -314,11 +360,27 @@
     DEX
     BPL loop
 
-    ; Update x coord
+    ; Update x,y coord
+    LDY #1
+    LDA (DATA_POINTER),Y
+    STA Y_COORD
     LDA (DATA_POINTER)
     DEA
     DEA
     STA (DATA_POINTER)
+    STA X_COORD
+    BNE nonzero
+    
+    ; Recalculate vmem position on zero
+    JSR coords2mem
+    LDY #2
+    LDA VMEM_POINTER
+    STA (DATA_POINTER),Y
+    INY
+    LDA VMEM_POINTER+1
+    STA (DATA_POINTER),Y
+    BRA skip3
+    nonzero:
     
     ; Update vmem position
     LDY #2

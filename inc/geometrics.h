@@ -1,3 +1,12 @@
+/* Copyright 2022 Durango Computer Team
+
+Use of this source code is governed by an MIT-style
+license that can be found in the LICENSE file or at
+https://opensource.org/licenses/MIT.
+*/
+
+/** @file geometrics.h Geometrics Functions Header File **/
+
 #ifndef GEOMETRICS_H
 #define GEOMETRICS_H
 

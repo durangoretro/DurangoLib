@@ -1,3 +1,12 @@
+/* Copyright 2023 Durango Computer Team
+
+Use of this source code is governed by an MIT-style
+license that can be found in the LICENSE file or at
+https://opensource.org/licenses/MIT.
+*/
+
+/** @file conio.h Con IO Library Header File **/
+
 #ifndef CONIO_H
 #define CONIO_H
 

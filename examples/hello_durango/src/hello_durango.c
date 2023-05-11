@@ -7,7 +7,8 @@
 #include <durango.h>
 
 int main(){
-	fillScreen(WHITE);
+	drawFullScreen(WHITE);
+	
 	
 	// Draw some pixels
 	drawPixel(0, 0, ORANGE);
@@ -17,6 +18,9 @@ int main(){
 	drawPixel(1, 1, ORANGE);
 	drawPixel(3, 1, LAVENDER_ROSE);
 	drawPixel(4, 1, RED);
-    
+    while(1){
+
+		waitVSync();
+	}
 	return 0;
 }
