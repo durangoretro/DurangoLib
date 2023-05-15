@@ -1,0 +1,34 @@
+BUILD_DIR=bin
+SOURCE_DIR=src
+INC_DIR=inc
+RES_DIR=res
+COMPILER_OPT= -I ../../inc --cpu 6502
+ASM_OPT = -t none
+LINKER_OPT= -C ../../cfg/durango16k.cfg
+LINKER_LIBS=  ../../bin/durango.lib
+DDK?=../../../
+RESCOMP?=$(DDK)/rescomp/rescomp.jar
+
+all: backgrounds.dux
+
+backgrounds.dux: backgrounds.bin
+	java -jar ${RESCOMP} -m SIGNER -n $$(git log -1 | head -1 | sed 's/commit //' | cut -c1-8) -t backgrounds -d "draw backgrounds" -i backgrounds.bin -o backgrounds.dux
+
+backgrounds.bin: $(BUILD_DIR)/ $(BUILD_DIR)/backgrounds.o 
+	ld65 $(LINKER_OPT) $(BUILD_DIR)/backgrounds.o $(LINKER_LIBS) -o backgrounds.bin
+
+$(BUILD_DIR)/:
+	mkdir -p $(BUILD_DIR)/
+
+$(BUILD_DIR)/backgrounds.o: $(BUILD_DIR)/backgrounds.s
+	ca65 $(ASM_OPT) $(BUILD_DIR)/backgrounds.s -o $(BUILD_DIR)/backgrounds.o
+$(BUILD_DIR)/backgrounds.s: $(SOURCE_DIR)/main.c $(INC_DIR)/background.h
+	cc65 $(COMPILER_OPT) -o $(BUILD_DIR)/backgrounds.s $(SOURCE_DIR)/main.c
+$(INC_DIR)/background.h: $(RES_DIR)/background.png
+	java -jar ${RESCOMP} -n back1 -m BACKGROUND -i $(RES_DIR)/background.png -o $(INC_DIR)/background.h
+
+clean:
+	rm -R $(BUILD_DIR)
+	rm $(INC_DIR)/background.h
+	rm backgrounds.bin
+	rm backgrounds.dux
