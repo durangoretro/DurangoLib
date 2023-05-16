@@ -57,10 +57,12 @@ void updateGhost(sprite * ghost){
            direction=LEFT;
         }
     }
-
+    //if direction is left(<0)
     if(direction<0){
+        //move sprite left
         move_sprite_left(ghost);
     }else{
+        //move Sprite right
         move_sprite_right(ghost);
     }
 }
