@@ -58,11 +58,10 @@ extern void __cdecl__ drawFillRect(unsigned char x, unsigned char y, unsigned ch
 extern void __cdecl__ drawLine(unsigned char x1, unsigned char y1, unsigned char x2, unsigned char y2, unsigned char color);
 
 /**
- * Draw a Rectangle on Screen
- * @param x: X Coord in pixels. The x coordinate is from left to Rigth.
- * @param y: Y Coord in pixels. The Y coordinate is from up to Down.
- * @param width: Rectangle width
- * @param height: Rectangle height
+ * Draw a Circle on Screen
+ * @param x: X center's Coord in pixels. The x coordinate is from left to Rigth.
+ * @param y: Y Center's Coord in pixels. The Y coordinate is from up to Down.
+ * @param ratio: Circle Ratio in pixels
  * @param color: color to use.
  */
 extern void __cdecl__ drawCircle(unsigned char x, unsigned char y, unsigned char radio, unsigned char color);
