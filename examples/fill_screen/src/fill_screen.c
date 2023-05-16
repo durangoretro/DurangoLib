@@ -1,5 +1,5 @@
 /*
- * Hello Durango
+ * FillScreen Example
  * To manually build:
  *  Use Makefile after compile the lib:
  *  cd ../..
