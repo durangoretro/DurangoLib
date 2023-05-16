@@ -1,3 +1,13 @@
+/* Copyright 2023 Durango Computer Team
+
+Use of this source code is governed by an MIT-style
+license that can be found in the LICENSE file or at
+https://opensource.org/licenses/MIT.
+
+Durango Project Web: https://www.durangoretro.com
+*/
+
+/** @file psv.h Virtual Serial Port Header File **/
 #ifndef PSV_H
 #define PSV_H
 
