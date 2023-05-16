@@ -5,7 +5,7 @@ license that can be found in the LICENSE file or at
 https://opensource.org/licenses/MIT.
 */
 
-/** @file qgraph.h Graphics Definition Header File **/
+/** @file sprites.h Sprites Definition Header File **/
 #ifndef SPRITES_H
 #define SPRITES_H
 
@@ -46,28 +46,38 @@ extern void __fastcall__ clrscr(void);
 extern void __fastcall__ draw_sprite(void*);
 /**
  * Move Sprite to Right
+ * @param sprite pointer to Sprite
 */
 extern void __fastcall__ move_sprite_right(void*);
 /**
  * Move Sprite to Left
+ *  @param sprite pointer to Sprite
 */
 extern void __fastcall__ move_sprite_left(void*);
 /**
  * Move Sprite Down
+ * @param sprite pointer to Sprite
 */
 extern void __fastcall__ move_sprite_down(void*);
 /**
  * Move Sprite to Up
+ * @param sprite pointer to Sprite
 */
 extern void __fastcall__ move_sprite_up(void*);
+
 /**
  * Clean a Sprite from Screen
+ * 
+ *  @param sprite pointer to Sprite
 */
 extern void __fastcall__ clean_sprite(void*);
+
 /**
  * Stamp a Sprite
+ * @param sprite pointer to Sprite
 */
 extern void __fastcall__ stamp_sprite(void*);
+
 /**
  * Check Two Sprites collision
 */
