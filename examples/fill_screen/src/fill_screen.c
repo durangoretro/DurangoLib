@@ -1,5 +1,5 @@
 /*
- * Hello Durango
+ * FillScreen Example
  * To manually build:
  *  Use Makefile after compile the lib:
  *  cd ../..
@@ -13,15 +13,15 @@
 int main(){
     while(1) {
 		// Fill screen
-    	fillScreen(GREEN);
+    	drawFullScreen(GREEN);
 		// Wait 10 frames
 		waitFrames(50);
 		// Fill screen
-    	fillScreen(YELLOW);
+    	drawFullScreen(YELLOW);
 		// Wait 10 frames
 		waitFrames(30);
 		// Fill screen
-    	fillScreen(RED);
+    	drawFullScreen(RED);
 		// Wait 10 frames
 		waitFrames(50);
 	}

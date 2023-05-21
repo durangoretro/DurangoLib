@@ -1,11 +1,12 @@
 /*
- * Draw a square
+ * Control a Square using Gameplad.
+ * To Run this example on Perdita use flag -g and WSAD controls
  * To manually build:
- * cc65 -I ../inc --cpu 6502 square.c -o square.s && ca65 -t none square.s -o square.o && ld65 -C ../cfg/durango16k.cfg square.o ../bin/vectors.o ../bin/durango.lib ../bin/sbc.lib -o square.bin
+ * make && make -C examples/squares
  */
 
 #include <durango.h>
-
+//Global Variables
 unsigned char x, y, gamepad;
 
 int main(){
@@ -14,16 +15,16 @@ int main(){
 	y = 2;	
 
 	// Draw background color
-	fillScreen(YELLOW);
+	drawFullScreen(BLACK);
 
 
 	while(1) {
 		// Wait for VSYNC
-		waitVsync();
+		waitVSync();
 		// Delete previously square
-		drawRect(x, y, 10, 10, YELLOW);
+		drawFillRect(x, y, 10, 10, BLACK);
 		// Read gamepad
-		gamepad=readGamepad1();
+		gamepad=readGamepad(GAMEPAD_1);
 		// Update square coords
 		if(gamepad & BUTTON_DOWN) {
 			y++;
@@ -42,8 +43,8 @@ int main(){
 			x++;
 		}		
 		// Draw square
-		drawRect(x, y, 10, 10, GREEN);
-		
+		drawFillRect(x, y, 10, 10, BLUE);
+		//Wait 1 Frame
 		waitFrames(1);
 	}
 	

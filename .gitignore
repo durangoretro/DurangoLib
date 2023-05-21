@@ -3,3 +3,4 @@ bin/
 *.zip
 .vscode/
 docs/**
+inc/font.h

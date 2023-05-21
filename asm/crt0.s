@@ -1,9 +1,4 @@
 ; ---------------------------------------------------------------------------
-; DURANGO SDK. CC65 SUPPORT
-; Durango Initialization
-; @author: Emilio Lopez Berenguer emilio@emiliollbb.net
-; @author: Carlos Santisteban Salinas zuiko21@gmail.com
-; @author: Victor Suárez García zerasul@gmail.com
 ; crt0.s
 ; ---------------------------------------------------------------------------
 ;
@@ -14,13 +9,20 @@
 .export   __STARTUP__ : absolute = 1        ; Mark as startup
 .import __STACKSTART__, __STACKSIZE__
 .import    copydata, zerobss, initlib, donelib
-
-.include  "zeropage.inc"
-.include "durango_hw.inc"
-.include "crt0.inc"
+.include "../asm/durango_constants.inc"
+.include "zeropage.inc"
 
 ; Enable 65C02 instruction set
 .PC02
+
+; 200 -> IRQ
+; 202 -> NMI
+; 204 -> BRK
+; 206 (4 BYTES)-> TICKS
+; INC $206
+; BNE
+; INC $207
+;....
 
 ; ---------------------------------------------------------------------------
 ; SEGMENT STARTUP
@@ -30,81 +32,143 @@
 
 ; Initialize Durango X
 _init:
-    ; Disable interrupts
-    SEI
-    ; Clear decimal mode
-    CLD
-    ; Initialize stack pointer to $01FF
-    LDX #$FF
+    ; Initialize 6502    
+    SEI ; Disable interrupts
+    CLD ; Clear decimal mode
+    LDX #$FF ; Initialize stack pointer to $01FF
     TXS
     
-    ; Durango-X specific stuff
-    ; Enable Durango interrupt hardware (turn off Error LED)
-    STX INT_ENABLE          ; any odd value, like $FF, will do
-    
     ; Clean video mode
-    ; [HiRes Invert S1 S0    RGB LED NC NC]
-    LDA #%00111000
+    LDA #$30
     STA VIDEO_MODE
+    
+    ; Display some splash screen
+    
+    ; ** ROM test **
+    ; * declare some temporary vars *
+sum		= $00			; included as output parameters
+chk		= $01				; sum of sums
+sysptr  = $02
+reset   = $C000
 
-
+; *** compute checksum *** initial setup is 12b, 16t
+	LDX #>reset				; start page as per interface (MUST be page-aligned!)
+    STX sysptr+1			; temporary ZP pointer
+	LDY #0					; this will reset index too
+	STY sysptr
+	STY sum					; reset values too
+	STY chk
+; *** main loop *** original version takes 20b, 426kt for 16KB ~0.28s on Durango-X
+    cs_loop:
+	LDA (sysptr), Y	; get ROM byte (5+2)
+    CLC
+	ADC sum			; add to previous (3+3+2)
+	STA sum
+	CLC
+	ADC chk			; compute sum of sums too (3+3+2)
+	STA chk
+	INY
+	BNE cs_loop		; complete one page (3..., 6655t per page)
+    
+    ; *** MUST skip IO page (usually $DF), very little penalty though ***
+    CPX #$FE    ; just before last page
+    BEQ cs_end
+    
+    CPX #$DE	; just before I/O space?
+	BNE cs_next
+    
+    ; skip IO page
+	INX
+    
+    ; next page
+    cs_next:
+	INX
+	STX sysptr+1
+    BRA cs_loop
+    
+    cs_end:
+    ; *** now compare computed checksum with signature *** 4b
+	LDA sum
+    CMP SIGNATURE
+    BNE rom_bad
+    LDA chk
+    CMP SIGNATURE+1
+    BNE rom_bad			; any non-zero bit will show up
+	BRA rom_ok				; otherwise, all OK!
+    
+    ; Display wrong checksum by blinking error led
+    rom_bad:
+	wait_loop:
+    INX
+    BNE wait_loop
+    INY
+    BNE wait_loop
+    EOR #$01
+    STA INT_ENABLE
+    BRA wait_loop
+    
+    rom_ok:
+    ; Clean up RAM
+    LDA #$00
+    LDX #$00
+    STX $01
+    LDY #$02
+    STY $00
+    loopcm:
+    STA ($00), Y
+    INY
+    BNE loopcm
+	INC $01
+    BPL loopcm
    
     ; Initialize cc65 stack pointer
-    LDY #<(__STACKSTART__ + __STACKSIZE__)
+    LDA #<(__STACKSTART__ + __STACKSIZE__)
+    STA sp
     LDA #>(__STACKSTART__ + __STACKSIZE__)
-    STY sp
     STA sp+1
 
     ; Initialize memory storage
     JSR zerobss
     JSR copydata
     JSR initlib
+
+    ; Initialize Durango Video
+    LDA #$3C
+    STA VIDEO_MODE
     
-    ; Interrupt setup
     ; Set up IRQ subroutine
-    LDY #<_irq_int
+    LDA #<_irq_int
+    STA IRQ_ADDR
     LDA #>_irq_int
-    STY IRQ_ADDR
     STA IRQ_ADDR+1
     
     ; Set up NMI subroutine
-    LDY #<_nmi_int
+    LDA #<_nmi_int
+    STA NMI_ADDR
     LDA #>_nmi_int
-    STY NMI_ADDR
     STA NMI_ADDR+1
     
-    ; Initialize interrupts counter and other stuff
-    LDX #3                  ; byte offset = 0...3
-    cl_loop:
-    STZ TICKS, X            ; interrupts counter
-    DEX
-    BPL cl_loop
-    
+    ; Initialize interrupts counter
+    STZ $0206
+    STZ $0207
+    STZ $0208
+    STZ $0209
+
     ; Init gamepads
-    STA GAMEPAD1            ; latch pad values
-    LDX #7
+    STA GAMEPAD1
+    LDX #8
     loop:
-    STA GAMEPAD2                ; send clock pulses
-    STZ KEYBOARD_MODIFIERS, X   ; this will init some matrix keyboard and CONIO stuff
+    STA GAMEPAD2
     DEX
-    BPL loop
-    LDA GAMEPAD1            ; check base values
+    BNE loop
+    LDA GAMEPAD1
     LDX GAMEPAD2
-    STA GAMEPAD_MASK1
-    STX GAMEPAD_MASK2
-    
-    ; Select keyboard driver EEEEEEEK
-	LDX #0					; default is PASK
-	LDA #32					; column 6
-	STA MATRIX_KEYBOARD		; select it
-	LDA MATRIX_KEYBOARD		; and read rows
-	CMP #$2C				; is it a 5x8 matrix? EEEEEEEEEEEEEEK
-	BNE not_5x8
-		LDX #2				; set as default keyboard
-not_5x8:
-	STX KEYBOARD_TYPE		; set selected type
+    STA GAMEPAD_MODE1
+    STX GAMEPAD_MODE2
     
     ; Enable Durango interrupts
+    LDA #$01
+    STA INT_ENABLE
     CLI
     
     ; Call main()
@@ -118,202 +182,97 @@ _exit:
 ; Stop
 _stop:
     STP
-    NOP
-    NOP
-    JMP _stop       ; universal code
+    BRA _stop
 
-; ***************** ISR *****************
+
 ; Maskable interrupt (IRQ) service routine
 _irq_int:  
     ; Save registres and filter BRK
     PHA
     PHX
+    PHY
     TSX
-    LDA $103,X
+    LDA $104,X
     AND #$10
     BNE _stop
     ; Increment interrupt counter
-    INC TICKS
+    INC $0206
     BNE next
-    INC TICKS+1
+    INC $0207
     BNE next
-    INC TICKS+2
+    INC $0208
     BNE next
-    INC TICKS+3
+    INC $0209
     next:
     ; Read controllers
-    STA GAMEPAD1        ; latch values
+    STA GAMEPAD1
     LDX #8
     loop2:
-    STA GAMEPAD2        ; send clock pulses
+    STA GAMEPAD2
     DEX
     BNE loop2
     LDA GAMEPAD1
-    EOR GAMEPAD_MASK1
+    EOR GAMEPAD_MODE1
     STA GAMEPAD_VALUE1
     LDA GAMEPAD2
-    EOR GAMEPAD_MASK2
+    EOR GAMEPAD_MODE2
     STA GAMEPAD_VALUE2
-    ; Read keyboard thru selected driver
-    JSR kbd_isr
+    
+    ; Read keyboard
+    LDX #4
+    LDA #%00010000
+    keyboard_loop:
+    STA KEYBOARD
+    PHA
+    LDA KEYBOARD
+    STA KEYBOARD_CACHE,X
+    PLA
+    LSR
+    DEX
+    BPL keyboard_loop
+    
     ; Restore registers and return
+    PLY
     PLX
     PLA
-; Non-maskable interrupt (NMI) service routine, does nothing by default
-_nmi_int:
     RTI 
 
-; *** keyboard drivers ***
-    kbd_isr:
-	LDX KEYBOARD_TYPE
-	JMP (kbd_drv, X)		; CMOS only
+; Non-maskable interrupt (NMI) service routine
+_nmi_int:
+    PHA
+    PHX
+    
+    LDA VIDEO_MODE
+    AND #$30
+    CMP #$30
+    BEQ case_0
+    CMP #$00
+    BEQ case_1
+    CMP #$10
+    BEQ case_2
+    CMP #$20
+    BEQ case_3
+    
+    case_0:
+    LDX #$88
+    BRA case_end
+    case_1:
+    LDX #$98
+    BRA case_end
+    case_2:
+    LDX #$A8
+    BRA case_end
+    case_3:
+    LDX #$3C
+    BRA case_end
+    
+    case_end:
+    STX VIDEO_MODE
+    
+    PLX
+    PLA
+    RTI
 
-; *** drivers pointer list ***
-kbd_drv:
-	.word	drv_pask
-	.word	drv_5x8         ; must save Y
-
-; *** generic PASK driver ***
-drv_pask:
-	LDA PASK_PORT   		; PASK peripheral address
-	STA KEY_PRESSED			; store for software
-	RTS
-
-; *** 5x8 integrated matrix keyboard ***
-drv_5x8:
-    PHY                     ; * needed for DurangoLib ISR *
-	LDY #0
-	STY KEYBOARD_MODIFIERS	; reset modifiers (no need for STZ)
-	INY						; column 1 has CAPS SHIFT
-	STY MATRIX_KEYBOARD		; select column
-	LDA MATRIX_KEYBOARD		; get rows
-	ASL						; extract ROW8 (SPACE)...
-	ASL						; ...then ROW7 (ENTER)...
-	ASL						; ...and finally ROW6 (SHIFT) into C (3b, 6t; was 6b, 7/8t)
-	ROR KEYBOARD_MODIFIERS	; insert CAPS bit at left (will end at d6)
-	INY						; second column
-	STY MATRIX_KEYBOARD		; select it
-	LDA MATRIX_KEYBOARD		; and read its rows
-	ASL						; only d7 is interesting (ALT, aka SYMBOL SHIFT)
-	ROR KEYBOARD_MODIFIERS	; insert ALT bit at d7
-	LDY #5					; prepare to scan backwards (note indices are 1...5)
-col_loop:
-		LDA col_bit-1, Y	; get bit position for column, note offset
-		STA MATRIX_KEYBOARD	; select column
-		LDA MATRIX_KEYBOARD	; and read it
-;		STZ MATRIX_KEYBOARD	; deselect all, not necessary but lower power (CMOS only)
-		AND k_mask-1, Y		; discard modifier bits, note offset
-		BEQ kb_skip			; no keys from this column
-			LDX #7			; row loop (row indices are 0...7)
-row_loop:
-			ASL				; d7 goes first
-			BCS key_pr		; detected keypress!
-			DEX
-			BPL row_loop	; all 8 rows
-kb_skip:
-		DEY					; next column
-		BNE col_loop
-; if arrived here, no keys (beside modifiers) were pressed
-	STY KEYBOARD_SCAN		; Y is zero, which is now an invalid scancode
-	LDA #DELAY				; reset key repeat
-	STA KEYBOARD_REPEAT
-no_key:
-	LDA #0					; 0 means no (new) key was pressed
-set_key:					; common ASCII code output, with or without actual key
-	STA KEY_PRESSED			; return ASCII code (0 = no key)
-    PLY                     ; * OK for DurangoLib *
-	RTS
-; otherwise, a key was detected
-key_pr:
-	TYA						; get column index (1...5)
-	ASL
-	ASL
-	ASL						; times 8 (8...40)
-	STX KEY_PRESSED			; TEMPORARY STORAGE of ·····XXX
-	ORA KEY_PRESSED			; A = ··YYYXXX
-	BIT KEYBOARD_CONTROL	; is control-mode enabled?
-	BMI ctl_key				; check different table (without checking any modifiers nor repeat)
-		ORA KEYBOARD_MODIFIERS		; scancode is complete in A
-; look for new or repeated key
-		CMP KEYBOARD_SCAN	; same as before?
-		BNE diff_k			; nope, just generate new keystroke
-			DEC KEYBOARD_REPEAT		; otherwise update repeat counter
-				BNE no_key	        ; if not expired, just simulate released key for a while
-			LDX #RATE		        ; I believe this goes here...
-			STX KEYBOARD_REPEAT		; the counter is reset, repeat current keystroke
-diff_k:
-		STA KEYBOARD_SCAN	; in any case, update last scancode as new keystroke
-		TAX					; use scancode as index
-		LDA kb_map-8, X		; get ASCII from layout, note offset
-		CMP #$FF			; invalid ASCII, this will change into CTRL mode
-		BNE set_key			; not the CONTROL combo, all done
-			STA KEYBOARD_CONTROL	; otherwise, $FF sets d7 for CTRL mode
-			JMP no_key		        ; no ASCII for now
-; if arrived here, a key was pressed while in CONTROL mode (will not repeat)
-ctl_key:
-	TAX						; use scancode (without modifiers) as index
-	LDA ctl_map-8, X		; get ASCII from CONTROL-mode layout, note offset
-		BEQ no_key			; invalid ASCII, this will stay into CTRL mode
-	STA KEYBOARD_CONTROL	; otherwise clear d7, no longer in CTRL mode (works as none of control codes is over 127)
-	BNE set_key				; and send that control code (hopefully no need for BRA)
-
-; *******************
-; *** data tables ***
-; *******************
-
-; *** standard keymap, first 8 bytes removed ***
-kb_map:
-; unshifted keys (d7d6=00)
-	.byte	"1qa0p", 0, $D, ' '		; column 1, note SHIFT disabled (scan = 8...$F)
-	.byte	"2ws9ozl", 0			; column 2, note ALT disabled (scan = $10...$17)
-	.byte	"3ed8ixkm"				; column 3 (scan = $18...$1F)
-	.byte	"4rf7ucjn"				; column 4 (scan = $20...$27)
-	.byte	"5tg6yvhb"				; column 5 (scan = $28...$2F)
-; * note 24-byte gap *
-; bit positions for every column (may place in gaps)
-col_bit:
-	.byte	1, 2, 4, 8, 16
-; valid row bits minus shift keys
-k_mask:
-	.byte	%11011111, %01111111, %11111111, %11111111, %11111111
-; * filling after tables inside gap *
-	.res	14, 0
-kb_s_map:
-; SHIFTed keys (d6=1)
-	.byte	$1B, "QA", 8, 'P', 0, $D, 3		; column 1, note SHIFT disabled (scan = $48...$4F)
-	.byte	9, "WS", $FF, "OZL", 0			; column 2, note ALT disabled and CTRL code switch (scan = $50...$57)
-	.byte	$F, "ED", 6, "IXKM"				; column 3 (scan = $58...$5F)
-	.byte	$E, "RF", $B, "UCJN"			; column 4 (scan = $60...$67)
-	.byte	2, "TG", $A, "YVHB"				; column 5 (scan = $68...$6F)
-; note 24-byte gap
-	.res	24, 0
-kb_a_map:
-; ALTed keys (d7=1)
-	.byte	'!', $A1,$E1, '_', $22,0,$F1, 0	; column 1, note SHIFT disabled (scan = $88...$8F)
-	.byte	"@~;)", $F3, ":=", 0			; column 2, note ALT disabled (scan = $90...$97)
-	.byte	'#', $E9, "|(", $ED, $BF, "+."	; column 3 (scan = $98...$9F)
-	.byte	"$<['", $FA, "?-,"				; column 4 (scan = $A0...$A7)
-	.byte	"%>]&", $FC, '/', $5E, '*'		; column 5 (scan = $A8...$AF)
-; note 24-byte gap
-	.res	24, 0
-kb_as_map:
-; SHIFT+ALT (d7d6=11)
-	.byte	0, $B0, $C1, 0, 0, 0, $D1, 0	; column 1, note SHIFT disabled (scan = $C8...$CF)
-	.byte	$18, 0, 0, 0, $D3, 0, 0, 0		; column 2, note ALT disabled (scan = $D0...$D7)
-	.byte	0, $C9, $5C, 5, $CD, $A4, 0, 0	; column 3 (scan = $D8...$DF)
-	.byte	0, $96, '{', $19, $DA, 0, 0, 0	; column 4 (scan = $E0...$E7)
-	.byte	1, $98, '}', $16, $DC, 0, 0, 0	; column 5 (scan = $E8...$EF)
-
-; *** control mode keymap, first 8 bytes removed *** may split in 16-byte chunks between gaps
-ctl_map:
-	.byte	$1B, $11, 1, 0, $10, 0, 0, 0		; column 1, note SHIFT disabled (scan = 8...$F)
-	.byte	$1C, $17, $13, 0, $F, $1A, $C, 0	; column 2, note ALT disabled (scan = $10...$17)
-	.byte	$1D, 5, 4, 0, 9, $18, $B, $D		; column 3 (scan = $18...$1F)
-	.byte	$1E, $12, 6, 0, $15, 3, $A, $E		; column 4 (scan = $20...$27)
-	.byte	$1F, $14, 7, 0, $19, $16, 8, 2		; column 5 (scan = $28...$2F)
-
-; ***************************
-; Vectored Interrupt handlers
 hw_irq_int:
     JMP (IRQ_ADDR)
     
@@ -321,34 +280,76 @@ hw_nmi_int:
     JMP (NMI_ADDR)
 
 ; ---------------------------------------------------------------------------
-; SEGMENT VECTTORS
+; SEGMENT VECTORS
 ; ---------------------------------------------------------------------------
 
 .segment  "VECTORS"
 
 .addr      hw_nmi_int    ; NMI vector
-.addr      _init         ; Reset vector
+.addr      _init       ; Reset vector
 .addr      hw_irq_int    ; IRQ/BRK vector
 
 ; ---------------------------------------------------------------------------
-; SEGMENT METADATA
+; SEGMENT DXHEAD
 ; ---------------------------------------------------------------------------
-.segment "METADATA"
-.byt $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-.byt $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-.byt $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-.byt $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-.byt $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-.byt $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-.byt $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-.byt "SIGNATURE:["
-.byt $00,$00
-.byt "]$$"
+.segment "DXHEAD"
+
+; 8 bytes
+.byt $00
+.byt "dX"
+.byt "****"
+.byt $0d
+
+; 222 bytes
+; TITLE_COMMENT[
+.byt "##################################################"
+.byt "##################################################"
+.byt "##################################################"
+.byt "##################################################"
+.byt "######################";]
+
+
+; 18 bytes
+;DCLIB_COMMIT[
+.byt "LLLLLLLL"
+;]
+;MAIN_COMMIT[
+.byt "MMMMMMMM"
+;]
+;VERSION[
+.byt "VV"
+;]
+
+; 8 bytes
+;TIME[
+.byt "TT"
+;]
+;DATE[
+.byt "DD"
+;]
+;FILEZISE[
+.byt $00,$40,$00,$00
+;]
 
 ; ---------------------------------------------------------------------------
 ; SEGMENT HEADER
 ; ---------------------------------------------------------------------------
 .segment "HEADER"
 .byt "DURANGO CC65v1.0"
-.byt "##DURANGO LIB###"
-.byt "################"
+.byt "                "
+.byt "                "
+
+; ---------------------------------------------------------------------------
+; SEGMENT METADATA
+; ---------------------------------------------------------------------------
+.segment "METADATA"
+.byt "################################"
+.byt "################################"
+.byt "SIGNATURE:[##]$$"
+.byt "DCLIB:[########]"
+.byt "BUILD:[########]"
+.byt "######DmOS######"
+.byt "#"
+; Dev-Cart JMP at $FFE1
+JMP($FFFC)
+.byt "############"
