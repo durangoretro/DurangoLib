@@ -243,4 +243,9 @@ extern void __fastcall__ clear_screen(void);
 */
 #define KEY_1 0X01
 
+/**
+ * Allow to get one Color by Index
+*/
+int COLOR_BY_INDEX[]={BLACK,GREEN,RED,ORANGE,PHARMACY_GREEN,LIME,MYSTIC_RED,
+                      YELLOW,BLUE, DEEP_SKY_BLUE,MAGENTA,LAVENDER_ROSE,NAVY_BLUE,CIAN,PINK_FLAMINGO,WHITE};
 #endif
