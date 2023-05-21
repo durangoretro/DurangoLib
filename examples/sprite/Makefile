@@ -34,9 +34,4 @@ $(RES_DIR)/background.h: $(RES_DIR)/background.png
 	java -jar ${RESCOMP} -n back1 -m BACKGROUND -i $(RES_DIR)/background.png -o $(RES_DIR)/background.h
 
 clean:
-	rm -R $(BUILD_DIR)
-	rm $(RES_DIR)/background.h
-	rm $(RES_DIR)/sprite1.h
-	rm $(RES_DIR)/sprite2.h
-	rm sprites.bin
-	rm sprites.dux
+	rm -R $(BUILD_DIR) $(RES_DIR)/background.h $(RES_DIR)/sprite1.h $(RES_DIR)/sprite2.h $(RES_DIR)/sprite3.h sprites.bin sprites.dux

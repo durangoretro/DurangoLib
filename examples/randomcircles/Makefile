@@ -15,10 +15,10 @@ $(BUILD_DIR)/random_circles.o: $(BUILD_DIR)/random_circles.s
 random_circles.bin: $(BUILD_DIR)/ $(BUILD_DIR)/random_circles.o
 	ld65 $(LINKER_OPT) $(BUILD_DIR)/random_circles.o $(LINKER_LIBS) -o random_circles.bin
 random_circles.dux: random_circles.bin
-	java -jar ${RESCOMP} -m SIGNER -n $$(git log -1 | head -1 | sed 's/commit //' | cut -c1-8) -t HELLO -d "HELLO DURANGO" -i random_circles.bin -o random_circles.dux
+	java -jar ${RESCOMP} -m SIGNER -n $$(git log -1 | head -1 | sed 's/commit //' | cut -c1-8) -t RCIRCLES -d "Random Circles" -i random_circles.bin -o random_circles.dux
 
 $(BUILD_DIR)/:
 	mkdir -p $(BUILD_DIR)
 
 clean:
-	rm -Rf $(BUILD_DIR)/ random_circles.bin random_circles_16k.bin
+	rm -Rf $(BUILD_DIR)/ random_circles.bin random_circles.dux

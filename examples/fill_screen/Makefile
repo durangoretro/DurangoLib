@@ -15,7 +15,7 @@ $(BUILD_DIR)/fill_screen.o: $(BUILD_DIR)/fill_screen.s
 fill_screen.bin: $(BUILD_DIR)/ $(BUILD_DIR)/fill_screen.o
 	ld65 $(LINKER_OPT) $(BUILD_DIR)/fill_screen.o $(LINKER_LIBS) -o fill_screen.bin
 fill_screen.dux: fill_screen.bin
-	java -jar ${RESCOMP} -m SIGNER -n $$(git log -1 | head -1 | sed 's/commit //' | cut -c1-8) -t HELLO -d "HELLO DURANGO" -i fill_screen.bin -o fill_screen.dux
+	java -jar ${RESCOMP} -m SIGNER -n $$(git log -1 | head -1 | sed 's/commit //' | cut -c1-8) -t FILL -d "Fill Screen" -i fill_screen.bin -o fill_screen.dux
 
 $(BUILD_DIR)/:
 	mkdir -p $(BUILD_DIR)

@@ -15,10 +15,10 @@ $(BUILD_DIR)/square.o: $(BUILD_DIR)/square.s
 square.bin: $(BUILD_DIR)/ $(BUILD_DIR)/square.o
 	ld65 $(LINKER_OPT) $(BUILD_DIR)/square.o $(LINKER_LIBS) -o square.bin
 square.dux: square.bin
-	java -jar ${RESCOMP} -m SIGNER -n $$(git log -1 | head -1 | sed 's/commit //' | cut -c1-8) -t HELLO -d "HELLO DURANGO" -i square.bin -o square.dux
+	java -jar ${RESCOMP} -m SIGNER -n $$(git log -1 | head -1 | sed 's/commit //' | cut -c1-8) -t SQUARE -d "SQUARE CONTROL" -i square.bin -o square.dux
 
 $(BUILD_DIR)/:
 	mkdir -p $(BUILD_DIR)
 
 clean:
-	rm -Rf $(BUILD_DIR)/ square.bin square_16k.bin
+	rm -Rf $(BUILD_DIR)/ square.bin square.dux

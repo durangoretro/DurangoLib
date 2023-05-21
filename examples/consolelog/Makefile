@@ -15,10 +15,10 @@ $(BUILD_DIR)/console_log.o: $(BUILD_DIR)/console_log.s
 console_log.bin: $(BUILD_DIR)/ $(BUILD_DIR)/console_log.o
 	ld65 $(LINKER_OPT) $(BUILD_DIR)/console_log.o $(LINKER_LIBS) -o console_log.bin
 console_log.dux: console_log.bin
-	java -jar ${RESCOMP} -m SIGNER -n $$(git log -1 | head -1 | sed 's/commit //' | cut -c1-8) -t HELLO -d "HELLO DURANGO" -i console_log.bin -o console_log.dux
+	java -jar ${RESCOMP} -m SIGNER -n $$(git log -1 | head -1 | sed 's/commit //' | cut -c1-8) -t CONSOLE_LOG -d "Console Log" -i console_log.bin -o console_log.dux
 
 $(BUILD_DIR)/:
-	mkdir -p $(BUILD_DIR)
+	mkdir -p $(BUILD_DIR) 
 
 clean:
-	rm -Rf $(BUILD_DIR)/ console_log.bin console_log_16k.bin
+	rm -Rf $(BUILD_DIR)/ console_log.bin console_log.dux

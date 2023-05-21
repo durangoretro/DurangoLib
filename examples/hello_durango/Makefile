@@ -21,4 +21,4 @@ $(BUILD_DIR)/:
 	mkdir -p $(BUILD_DIR)
 
 clean:
-	rm -Rf $(BUILD_DIR)/ hello_durango.bin hello_durango_16k.bin
+	rm -Rf $(BUILD_DIR)/ hello_durango.bin hello_durango.dux

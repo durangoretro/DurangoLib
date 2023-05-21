@@ -22,3 +22,5 @@ $(BUILD_DIR)/print.o: $(BUILD_DIR)/print.s
 	ca65 $(ASM_OPT) $(BUILD_DIR)/print.s -o $(BUILD_DIR)/print.o
 $(BUILD_DIR)/print.s: $(SOURCE_DIR)/main.c
 	cc65 $(COMPILER_OPT) -o $(BUILD_DIR)/print.s $(SOURCE_DIR)/main.c
+clean:
+	rm -Rf $(BUILD_DIR)/ print.bin print.dux

@@ -3,6 +3,7 @@ RES_DIR=res
 BUILD_DIR=bin
 CFG_DIR=cfg
 INC_DIR=inc
+EXAMPLES_DIR=examples
 DDK?=../
 RESCOMP ?= $(DDK)/rescomp/target/rescomp.jar
 
@@ -47,4 +48,4 @@ clean:
 	rm -Rf $(BUILD_DIR) $(INC_DIR)/font.h
 
 zip: $(BUILD_DIR)/durango.lib
-	zip durangolib-$$(git log -1 | head -1 | sed 's/commit //' | cut -c1-8).zip $(INC_DIR)/* $(CFG_DIR)/* $(BUILD_DIR)/durango.lib
+	zip -r durangolib-$$(git log -1 | head -1 | sed 's/commit //' | cut -c1-8).zip $(INC_DIR)/* $(CFG_DIR)/* $(EXAMPLES_DIR)/* $(BUILD_DIR)/durango.lib

@@ -4,21 +4,24 @@
  * make && make -C examples/random_circles
  */
 
+//Include durango lib
 #include <durango.h>
 
 
 int main(){
+    //local variables
 	int x,y,ratio,color;
-    random_init(1122);
-
+    //init random Seed
+    random_init(115);
+    //draw black Screen
+    drawFullScreen(BLACK);
 	while(1) {
-		
-        drawFullScreen(BLACK);
-        x=random()*128;
-        y=random()*128;
-        ratio=10+random()*10;
-        color = random()*16;
-
+        //calculate coords ratio and color using random
+        x=(random())%128;
+        y=(random())%128;
+        ratio=random()+10;
+        color = (random())%16;
+        //Draw Circles using the previous calculated values
         drawCircle(x,y,ratio,COLOR_BY_INDEX[color]);
 		// Wait for VSYNC
         waitVSync();
