@@ -6,6 +6,7 @@ INC_DIR=inc
 EXAMPLES_DIR=examples
 DDK?=../
 RESCOMP ?= $(DDK)/rescomp/target/rescomp.jar
+DDK_VERSION ?= 0.1.0
 
 all: $(BUILD_DIR)/durango.lib $(INC_DIR)/font.h
 
@@ -48,4 +49,4 @@ clean:
 	rm -Rf $(BUILD_DIR) $(INC_DIR)/font.h
 
 zip: $(BUILD_DIR)/durango.lib
-	zip -r durangolib-$$(git log -1 | head -1 | sed 's/commit //' | cut -c1-8).zip $(INC_DIR)/* $(CFG_DIR)/* $(EXAMPLES_DIR)/* $(BUILD_DIR)/durango.lib
+	zip -r durangolib-$(DDK_VERSION)-$$(git log -1 | head -1 | sed 's/commit //' | cut -c1-8).zip $(INC_DIR)/* $(CFG_DIR)/* $(EXAMPLES_DIR)/* $(BUILD_DIR)/durango.lib
