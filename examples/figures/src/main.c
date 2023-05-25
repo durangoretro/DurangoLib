@@ -11,7 +11,7 @@ int main(){
     //Draw Fill Rects
     drawFillRect(5,5,20,40,PHARMACY_GREEN);
     drawFillRect(26,5,40,20,ORANGE);
-    drawFillRect(26,25,40,20,CIAN);
+    drawFillRect(26,25,40,20,CYAN);
 
     //Draw Circles
     drawCircle(80,15,10,NAVY_BLUE);
