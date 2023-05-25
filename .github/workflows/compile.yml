@@ -15,4 +15,4 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Compile Lib
-        run: make
+        run: git config --global --add safe.directory /__w/DurangoLib/DurangoLib && make
