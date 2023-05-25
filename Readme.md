@@ -1,5 +1,7 @@
 # Durango Lib
 
+[![Compile](https://github.com/durangoretro/DurangoLib/actions/workflows/compile.yml/badge.svg)](https://github.com/durangoretro/DurangoLib/actions/workflows/compile.yml)
+
 Durango Computer FrameWork.
 
 [https://www.durangoretro.com/](https://www.durangoretro.com/)
