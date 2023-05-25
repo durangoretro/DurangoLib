@@ -21,6 +21,11 @@ extern void __fastcall__ setHiRes(unsigned char);
 extern void __fastcall__ waitVSync(void);
 
 /**
+ * Wait Until A button is pressed (action Button on Gamepad or Space/Intro on KeyBoard).
+*/
+extern void __fastcall__ waitButton(void);
+
+/**
  * Wait until the Start Button (or enter button) is pressed.
 */
 extern void __fastcall__ waitStart(void);
