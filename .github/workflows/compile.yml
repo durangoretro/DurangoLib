@@ -13,5 +13,6 @@ jobs:
         - /durangolib:/src/durango
       options: --cpus 1
     steps:
+      - uses: actions/checkout@v3
       - name: Compile Lib
         run: make
