@@ -1,13 +1,14 @@
+DDK?=../../
+RESCOMP?=$(DDK)/rescomp/rescomp.jar
 BUILD_DIR=bin
 SOURCE_DIR=src
 INC_DIR=inc
 RES_DIR=res
-COMPILER_OPT= -I ../../inc -I $(RES_DIR) --cpu 6502
+COMPILER_OPT= -I $(DDK)/inc -I $(RES_DIR) --cpu 6502
 ASM_OPT = -t none
-LINKER_OPT= -C ../../cfg/durango16k.cfg
-LINKER_LIBS=  ../../bin/durango.lib
-DDK?=../../../
-RESCOMP?=$(DDK)/rescomp/rescomp.jar
+LINKER_OPT= -C $(DDK)/cfg/durango16k.cfg
+LINKER_LIBS=  $(DDK)/bin/durango.lib
+
 
 all: sprites.dux
 

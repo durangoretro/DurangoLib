@@ -1,10 +1,12 @@
+DDK?=../../
+RESCOMP?=$(DDK)/rescomp/rescomp.jar
 BUILD_DIR=bin
 SOURCE_DIR=src
-COMPILER_OPT= -I ../../inc --cpu 6502
+COMPILER_OPT= -I $(DDK)/inc --cpu 6502
 ASM_OPT = -t none
-LINKER_OPT= -C ../../cfg/durango16k.cfg
-LINKER_LIBS=  ../../bin/durango.lib
-RESCOMP?=$(DDK)/rescomp/rescomp.jar
+LINKER_OPT= -C $(DDK)/cfg/durango16k.cfg
+LINKER_LIBS=  $(DDK)/bin/durango.lib
+
 
 all: fill_screen.dux
 
@@ -21,4 +23,4 @@ $(BUILD_DIR)/:
 	mkdir -p $(BUILD_DIR)
 
 clean:
-	rm -Rf $(BUILD_DIR)/ fill_screen.bin fill_screen_16k.bin
+	rm -Rf $(BUILD_DIR)/ fill_screen.bin fill_screen.dux

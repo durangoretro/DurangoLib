@@ -17,10 +17,10 @@ int main(){
     drawFullScreen(BLACK);
 	while(1) {
         //calculate coords ratio and color using random
-        x=(random())%128;
-        y=(random())%128;
-        ratio=random()+10;
-        color = (random())%16;
+        x=(random())&127;
+        y=(random())&127;
+        ratio=10;
+        color = (random())&15;
         //Draw Circles using the previous calculated values
         drawCircle(x,y,ratio,COLOR_BY_INDEX[color]);
 		// Wait for VSYNC

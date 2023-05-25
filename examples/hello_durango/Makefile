@@ -1,9 +1,10 @@
+DDK?=../../
 BUILD_DIR=bin
 SOURCE_DIR=src
-COMPILER_OPT= -I ../../inc --cpu 6502
+COMPILER_OPT= -I $(DDK)/inc --cpu 6502
 ASM_OPT = -t none
-LINKER_OPT= -C ../../cfg/durango16k.cfg
-LINKER_LIBS=  ../../bin/durango.lib
+LINKER_OPT= -C $(DDK)/cfg/durango16k.cfg
+LINKER_LIBS=  $(DDK)/bin/durango.lib
 RESCOMP?=$(DDK)/rescomp/rescomp.jar
 
 all: hello_durango.dux
@@ -15,7 +16,7 @@ $(BUILD_DIR)/hello_durango.o: $(BUILD_DIR)/hello_durango.s
 hello_durango.bin: $(BUILD_DIR)/ $(BUILD_DIR)/hello_durango.o
 	ld65 $(LINKER_OPT) $(BUILD_DIR)/hello_durango.o $(LINKER_LIBS) -o hello_durango.bin
 hello_durango.dux: hello_durango.bin
-	java -jar ${RESCOMP} -m SIGNER -n $$(git log -1 | head -1 | sed 's/commit //' | cut -c1-8) -t HELLO -d "HELLO DURANGO" -i hello_durango.bin -o hello_durango.dux
+	java -jar ${RESCOMP} -m SIGNER -n hello -t HELLO -d "HELLO DURANGO" -i hello_durango.bin -o hello_durango.dux
 
 $(BUILD_DIR)/:
 	mkdir -p $(BUILD_DIR)

@@ -7,7 +7,7 @@ EXAMPLES_DIR=examples
 DOCS_DIR=docs
 DDK?=../
 RESCOMP ?= $(DDK)/rescomp/target/rescomp.jar
-DDK_VERSION ?= 0.1.0
+DDK_VERSION ?= 0.1.1
 
 all: $(BUILD_DIR)/durango.lib $(INC_DIR)/font.h
 

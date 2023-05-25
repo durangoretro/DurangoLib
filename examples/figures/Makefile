@@ -1,11 +1,12 @@
+DDK?=../../
+RESCOMP?=$(DDK)/rescomp/rescomp.jar
 BUILD_DIR=bin
 SOURCE_DIR=src
-COMPILER_OPT= -I ../../inc --cpu 6502
+COMPILER_OPT= -I $(DDK)/inc --cpu 6502
 ASM_OPT = -t none
-LINKER_OPT= -C ../../cfg/durango16k.cfg
-LINKER_LIBS=  ../../bin/durango.lib
-DDK?=../../../
-RESCOMP?=$(DDK)/rescomp/rescomp.jar
+LINKER_OPT= -C $(DDK)/cfg/durango16k.cfg
+LINKER_LIBS=  $(DDK)/bin/durango.lib
+
 
 all: figures.dux
 
@@ -23,6 +24,4 @@ $(BUILD_DIR)/figures.o: $(BUILD_DIR)/figures.s
 $(BUILD_DIR)/figures.s: $(SOURCE_DIR)/main.c
 	cc65 $(COMPILER_OPT) -o $(BUILD_DIR)/figures.s $(SOURCE_DIR)/main.c
 clean:
-	rm -R $(BUILD_DIR)
-	rm figures.bin
-	rm figures.dux
+	rm -R $(BUILD_DIR) figures.bin figures.dux

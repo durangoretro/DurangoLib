@@ -21,6 +21,11 @@ extern void __fastcall__ setHiRes(unsigned char);
 extern void __fastcall__ waitVSync(void);
 
 /**
+ * Wait Until A button is pressed (action Button on Gamepad or Space/Intro on KeyBoard).
+*/
+extern void __fastcall__ waitButton(void);
+
+/**
  * Wait until the Start Button (or enter button) is pressed.
 */
 extern void __fastcall__ waitStart(void);
@@ -196,10 +201,14 @@ extern void __fastcall__ clear_screen(void);
  * Navy Blue
 */
 #define NAVY_BLUE 0xcc
+
+#define CYAN 0xdd
+
 /**
  * Cyan
+ * @deprecated use CYAN
 */
-#define CIAN 0xdd
+#define CIAN CYAN
 /**
  * Pink Flamingo
 */
@@ -247,5 +256,5 @@ extern void __fastcall__ clear_screen(void);
  * Allow to get one Color by Index
 */
 int COLOR_BY_INDEX[]={BLACK,GREEN,RED,ORANGE,PHARMACY_GREEN,LIME,MYSTIC_RED,
-                      YELLOW,BLUE, DEEP_SKY_BLUE,MAGENTA,LAVENDER_ROSE,NAVY_BLUE,CIAN,PINK_FLAMINGO,WHITE};
+                      YELLOW,BLUE, DEEP_SKY_BLUE,MAGENTA,LAVENDER_ROSE,NAVY_BLUE,CYAN,PINK_FLAMINGO,WHITE};
 #endif
