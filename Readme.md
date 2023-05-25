@@ -1,5 +1,7 @@
 # Durango Lib
 
+[![Compile](https://github.com/durangoretro/DurangoLib/actions/workflows/compile.yml/badge.svg)](https://github.com/durangoretro/DurangoLib/actions/workflows/compile.yml)
+
 Durango Computer FrameWork.
 
 [https://www.durangoretro.com/](https://www.durangoretro.com/)
@@ -78,7 +80,7 @@ Or using Docker:
 ```bash
 docker run --rm -v $PWD:/src/durango zerasul/durangodevkit:latest make -C examples/fill_scren
 ```
-
+test
 ### Use Template
 
 To create a new ROM, you can use our [Template Repository](https://github.com/durangoretro/hello_durango).
