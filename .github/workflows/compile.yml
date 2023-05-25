@@ -1,0 +1,17 @@
+name: CI
+on:
+  pull_request:
+    branches: [ main, develop ]
+jobs:
+  container-test-job:
+    runs-on: ubuntu-latest
+    container:
+      image: zerasul/durangodevkit:latest
+      env:
+        RESCOMP: /durango/rescomp/rescomp.jar
+      volumes:
+        - /durangolib:/src/durango
+      options: --cpus 1
+    steps:
+      - name: Compile Lib
+        run: make
