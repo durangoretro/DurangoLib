@@ -20,7 +20,7 @@ $(BUILD_DIR)/music.o: $(BUILD_DIR)/music.s
 music.bin: $(BUILD_DIR)/ $(BUILD_DIR)/music.o
 	ld65 $(LINKER_OPT) $(BUILD_DIR)/music.o $(LINKER_LIBS) -o music.bin
 music.dux: music.bin
-	java -jar ${RESCOMP} -m SIGNER -n music -t MUSCI -d "DURANGO MUSIC EXAMPLE" -i music.bin -o music.dux
+	java -jar ${RESCOMP} -m SIGNER -n music -t MUSIC -d "DURANGO MUSIC EXAMPLE" -i music.bin -o music.dux
 
 $(BUILD_DIR)/:
 	mkdir -p $(BUILD_DIR)
