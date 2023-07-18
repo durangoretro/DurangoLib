@@ -1,5 +1,7 @@
-.include "durango_constants.inc"
+.INCLUDE "durango_constants.inc"
 .PC02
+
+.importzp sreg
 
 ; Debug procedures
 .export _consoleLogHex
@@ -7,6 +9,7 @@
 .export _consoleLogBinary
 .export _consoleLogDecimal
 .export _consoleLogInt
+.export _consoleLogLong
 .export _consoleLogSignedChar
 .export _consoleLogHex16
 .export _consoleLogChar
@@ -62,6 +65,20 @@
     ; Send value to virtual serial port
     STA VSP
     STX VSP
+    RTS
+.endproc
+
+.proc  _consoleLogLong: near
+    ; Set virtual serial port in hex mode
+    ;LDY #VSP_INT32
+	STY VSP_CONFIG
+    ; Send value to virtual serial port
+    STA VSP
+    STX VSP
+	LDA sreg
+	STA VSP
+	LDA sreg+1
+	STA VSP
     RTS
 .endproc
 

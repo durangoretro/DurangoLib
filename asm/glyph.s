@@ -1,13 +1,18 @@
-.include "durango_constants.inc"
+.INCLUDE "durango_constants.inc"
 .PC02
 
 .importzp sp
 .import incsp8
+.import incsp1
 .import incsp2
 .import coords2mem
+.import readchar
 
 .export _printBCD
 .export _printStr
+.export _readStr
+
+.segment  "CODE"
 
 ; unsigned char x, unsigned char y, void* font, unsigned char color, unsigned char paper, long (4 bytes) value
 ; Font 5x8
@@ -60,10 +65,7 @@
     LDA (sp), Y
 	jsr draw_byte
 	
-	;LDA #$11
-	;jsr draw_byte
-	
-    JSR incsp8
+	JSR incsp8
     JMP incsp2
 .endproc
 
@@ -109,9 +111,120 @@
     STA DATA_POINTER
 	
     JSR draw_str
-    JMP incsp8
-	
-	
+    JMP incsp8	
+.endproc
+
+; 8  7   6,5    4      3      2,1   0  
+; x, y, font, color, paper, value, max
+.proc  _readStr: near
+    ; Load X coord
+    LDY #8
+    LDA (sp), Y
+    STA X_COORD    
+    
+    ; Load Y coord
+    DEY
+    LDA (sp), Y
+    STA Y_COORD
+    
+    ; Load font
+    DEY
+    LDA (sp), Y
+    STA RESOURCE_POINTER+1    
+    DEY
+    LDA (sp), Y
+    STA RESOURCE_POINTER
+    
+    ; Load color
+    DEY
+    LDA (sp), Y
+    STA COLOUR
+    
+    ; Load paper
+    DEY
+    LDA (sp), Y
+    STA PAPER
+    
+    ; String pointer
+    DEY
+    LDA (sp), Y
+    STA DATA_POINTER+1
+    DEY
+    LDA (sp), Y
+    STA DATA_POINTER
+    
+    ; Load max width
+    DEY
+    LDA (sp), Y
+    STA WIDTH        
+
+    ; Calculate coords
+    JSR coords2mem    
+    LDX VMEM_POINTER
+	STX TEMP5
+	LDX VMEM_POINTER+1
+	STX TEMP6
+	STZ TEMP1
+    
+    
+    ; Initialize string
+    LDY #1
+    nextchar:
+    LDA #0
+    STA (DATA_POINTER),Y
+    STY X2_COORD
+    DEY
+    LDA #$5f
+    STA (DATA_POINTER),Y  
+    
+    ; Draw string    	
+    PHY
+    JSR draw_str
+    PLY
+    
+    ; Push Y
+    PHY
+    ; Wait clean keyboard
+    cloop:    
+    JSR readchar
+    BNE cloop
+    ; Wait pushed key
+    rloop:
+    JSR readchar
+    BEQ rloop
+    ; Restore Y
+    PLY
+    
+    ; If \0, then return
+    CMP #$0A
+    BEQ end    
+    ; Save char in string
+    STA (DATA_POINTER),Y
+    
+    ; Update string in screen
+    LDX TEMP5
+	STX VMEM_POINTER
+	LDX TEMP6
+	STX VMEM_POINTER+1
+    PHY
+    JSR draw_str
+    PLY
+    LDX TEMP5
+	STX VMEM_POINTER
+	LDX TEMP6
+	STX VMEM_POINTER+1
+    
+    ; Next char
+    INY
+    INY
+    CPY WIDTH
+    BCC nextchar
+    
+    end:
+    LDA #0
+    STA (DATA_POINTER),Y
+    JSR incsp8
+    JMP incsp1	
 .endproc
 
 .proc draw_byte: near

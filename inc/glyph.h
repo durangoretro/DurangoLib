@@ -31,5 +31,16 @@ extern void __cdecl__ printBCD(unsigned char x, unsigned char y, void* font, uns
  * @param value String Value to print
 */
 extern void __cdecl__ printStr(unsigned char x, unsigned char y, void* font, unsigned char color, unsigned char paper, char *value);
+/**
+ * Read String
+ * @param x x coord in pixels
+ * @param y y coord in pixels
+ * @param font pointer to font data
+ * @param color Color index. See system.h for more info
+ * @param paper paper color index. See System.h for more info
+ * @param value string value
+ * @param max max length
+*/
+extern void __cdecl__ readStr(unsigned char x, unsigned char y, void* font, unsigned char color, unsigned char paper, char *value, char max);
 
 #endif

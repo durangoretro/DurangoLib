@@ -7,7 +7,7 @@
 .import   _main
 
 .export   __STARTUP__ : absolute = 1        ; Mark as startup
-.import __STACKSTART__, __STACKSIZE__
+.import __STACKSTART__, __STACKSIZE__, __ROM_START__
 .import    copydata, zerobss, initlib, donelib
 .include "../asm/durango_constants.inc"
 .include "zeropage.inc"
@@ -41,6 +41,18 @@ _init:
     ; Clean video mode
     LDA #$30
     STA VIDEO_MODE
+    ; Clean screen
+    LDA #$00
+    LDX #$60
+    STX $01
+    LDY #$00
+    STY $00
+    loopcs:
+    STA ($00), Y
+    INY
+    BNE loopcs
+	INC $01
+    BPL loopcs
     
     ; Display some splash screen
     
@@ -49,7 +61,9 @@ _init:
 sum		= $00			; included as output parameters
 chk		= $01				; sum of sums
 sysptr  = $02
-reset   = $C000
+;reset   = $C000 ; 16K
+;reset   = $8000 ; 32K
+reset = __ROM_START__
 
 ; *** compute checksum *** initial setup is 12b, 16t
 	LDX #>reset				; start page as per interface (MUST be page-aligned!)
@@ -196,13 +210,13 @@ _irq_int:
     AND #$10
     BNE _stop
     ; Increment interrupt counter
-    INC $0206
+    INC INT_COUNTER
     BNE next
-    INC $0207
+    INC INT_COUNTER+1
     BNE next
-    INC $0208
+    INC INT_COUNTER+2
     BNE next
-    INC $0209
+    INC INT_COUNTER+3
     next:
     ; Read controllers
     STA GAMEPAD1
@@ -328,7 +342,8 @@ hw_nmi_int:
 .byt "DD"
 ;]
 ;FILEZISE[
-.byt $00,$40,$00,$00
+.byt $00,$40,$00,$00 ; 16K
+;.byt $00,$80,$00,$00 ; 32K
 ;]
 
 ; ---------------------------------------------------------------------------

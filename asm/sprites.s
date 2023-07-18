@@ -1,4 +1,4 @@
-.include "durango_constants.inc"
+.INCLUDE "durango_constants.inc"
 .PC02
 
 .importzp sp

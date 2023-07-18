@@ -18,6 +18,7 @@ https://opensource.org/licenses/MIT.
 #include "glyph.h"
 #include "sprites.h"
 #include "geometrics.h"
+#include "music.h"
 
 //System Functions
 #include "system.h"
