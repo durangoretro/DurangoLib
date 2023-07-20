@@ -6,7 +6,7 @@ INC_DIR=inc
 RES_DIR=res
 COMPILER_OPT= -I $(DDK)/inc -I $(RES_DIR) --cpu 6502
 ASM_OPT = -t none
-LINKER_OPT= -C $(DDK)/cfg/durango16k.cfg
+LINKER_OPT= -C $(DDK)/cfg/durango.cfg
 LINKER_LIBS=  $(DDK)/bin/durango.lib
 
 
