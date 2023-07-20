@@ -4,7 +4,7 @@ BUILD_DIR=bin
 SOURCE_DIR=src
 COMPILER_OPT= -I $(DDK)/inc --cpu 6502
 ASM_OPT = -t none
-LINKER_OPT= -C $(DDK)/cfg/durango16k.cfg
+LINKER_OPT= -C $(DDK)/cfg/durango.cfg
 LINKER_LIBS=  $(DDK)/bin/durango.lib
 
 
