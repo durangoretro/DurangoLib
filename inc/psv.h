@@ -63,6 +63,19 @@ extern void __fastcall__ consoleLogChar(unsigned char);
 extern void __fastcall__ consoleLogStr(char *str);
 
 /**
+ * Console Log Signed Char
+ * @param value value Char
+*/
+extern void __fastcall__ consoleLogSignedChar(char value);
+
+/**
+ * Console Log Long
+ * @param value Long value
+*/
+extern void __fastcall__ consoleLogLong(long value);
+
+
+/**
  * Start Stop Watch Mode
 */
 extern void __fastcall__ startStopwatch(void);
