@@ -128,7 +128,7 @@ extern void __fastcall__ clear_screen(void);
 extern void __fastcall__ draw_image(void*);
 
 /**
- * Get Time in milliseconds
+ * Get Time in number of interruptions (1/50 seconds).
 */
 extern long __fastcall__ get_time(void);
 
