@@ -288,14 +288,7 @@ extern long __fastcall__ get_time(void);
 #define KEY_1 0X01
 
 // 0
-#define KEY_SPACE 0x80
-#define KEY_INTRO 0x40
-#define KEY_SHIFT 0x20
-#define KEY_P 0x10
-#define KEY_0 0x08
-#define KEY_A 0x04
-#define KEY_Q 0x02
-#define KEY_1 0x01
+
 #define KEY_ESC 0x01
 // 1
 #define KEY_ALT 0x80
