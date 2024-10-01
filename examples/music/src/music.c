@@ -6,6 +6,7 @@
  */
 
 #include <durango.h>
+#include <font.h>
 #include "melody.h"
 
 int main(){
@@ -17,7 +18,7 @@ int main(){
 	
     while(1){
 		//Read Gamepad value
-		gamepad=readGamepad(GAMEPAD_1);
+		int gamepad=readGamepad(GAMEPAD_1);
 		// if Button A is pressed on Gamepad 1
 		if(gamepad & BUTTON_A){
 			//Play Melody

@@ -2,7 +2,7 @@ DDK?=../../
 BUILD_DIR=bin
 RES_DIR=res
 SOURCE_DIR=src
-COMPILER_OPT= -I $(DDK)/inc --cpu 6502
+COMPILER_OPT= -I $(DDK)/inc -I inc  -I$(RES_DIR) --cpu 6502
 ASM_OPT = -t none
 LINKER_OPT= -C $(DDK)/cfg/durango.cfg
 LINKER_LIBS=  $(DDK)/bin/durango.lib
@@ -12,10 +12,10 @@ all: music.dux
 
 $(RES_DIR)/melody.h: $(RES_DIR)/melody.musicxml
 	java -jar ${RESCOMP} -n melody -m MUSIC -i $(RES_DIR)/melody.musicxml -o $(RES_DIR)/melody.h
-$(BUILD_DIR)/music.s: $(SOURCE_DIR)/music.c
+$(BUILD_DIR)/music.s: $(SOURCE_DIR)/music.c $(RES_DIR)/melody.h
 	cc65 $(COMPILER_OPT) -o $(BUILD_DIR)/music.s $(SOURCE_DIR)/music.c
 
-$(BUILD_DIR)/music.o: $(BUILD_DIR)/music.s
+$(BUILD_DIR)/music.o: $(BUILD_DIR)/music.s 
 	ca65 $(ASM_OPT) $(BUILD_DIR)/music.s -o $(BUILD_DIR)/music.o
 music.bin: $(BUILD_DIR)/ $(BUILD_DIR)/music.o
 	ld65 $(LINKER_OPT) $(BUILD_DIR)/music.o $(LINKER_LIBS) -o music.bin
