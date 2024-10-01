@@ -31,5 +31,5 @@ $(RES_DIR)/background.h: $(RES_DIR)/durangobackground.png
 clean:
 	rm -R $(BUILD_DIR)
 	rm $(RES_DIR)/background.h
-	rm backgrounds.bin
-	rm backgrounds.dux
+	rm *.bin
+	rm *.dux
